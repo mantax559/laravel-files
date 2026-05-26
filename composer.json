@@ -1,0 +1,56 @@
+{
+  "name": "mantax559/laravel-files",
+  "description": "Laravel Files",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [],
+  "authors": [
+    {
+      "name": "mantax559"
+    }
+  ],
+  "require": {
+    "php": "^8.5",
+    "laravel/framework": "^13.0",
+    "mantax559/laravel-helpers": "^1.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.0",
+    "mantax559/laravel-blade-attribute-sorter": "^1.0",
+    "orchestra/testbench": "^11.0"
+  },
+  "suggest": {
+    "ext-xdebug": "Required for code coverage analysis (recommended for development)"
+  },
+  "autoload": {
+    "psr-4": {
+      "Mantax559\\LaravelFiles\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Mantax559\\LaravelFiles\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "@php vendor/bin/phpunit",
+    "test-coverage": "@php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
+    "test-coverage-html": "@php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-html coverage",
+    "post-update-cmd": [
+      "@php vendor/bin/blade-attribute-sorter",
+      "@php vendor/bin/pint"
+    ]
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Mantax559\\LaravelFiles\\Providers\\AppServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
