@@ -6,19 +6,27 @@ namespace Mantax559\LaravelFiles\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
-use InvalidArgumentException;
-use JsonException;
+use Mantax559\LaravelFiles\Enums\FileExtension;
 
 class File extends Model
 {
     use HasUuids;
 
-    protected $fillable = [];
+    protected $fillable = [
+        'path',
+        'user_id',
+        'size_bits',
+        'extension',
+        'disk',
+        'original_name',
+        'mime_type',
+        'checksum',
+    ];
 
-    protected $casts = [];
+    protected $casts = [
+        'extension' => FileExtension::class,
+        'size_bits' => 'integer',
+    ];
 
     public $timestamps = true;
 
