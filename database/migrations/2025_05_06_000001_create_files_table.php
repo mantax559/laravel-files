@@ -10,12 +10,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create(config('laravel-settings.table'), function (Blueprint $table): void {
+        Schema::create(config('laravel-files.table'), function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('key')->unique();
-            $table->longText('value')->nullable();
-            $table->string('type');
-            $table->boolean('is_private')->default(false);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });
@@ -23,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists(config('laravel-settings.table'));
+        Schema::dropIfExists(config('laravel-files.table'));
     }
 };
