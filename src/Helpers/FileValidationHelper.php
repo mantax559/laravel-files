@@ -8,18 +8,20 @@ use Mantax559\LaravelHelpers\Helpers\ValidationHelper;
 
 final class FileValidationHelper
 {
+    private const BYTES_IN_KILOBYTE = 1024;
+
     public static function getFileRules(
         string|bool|null $required = null,
         ?int $fileSize = null,
         ?int $minFileSize = null,
         ?int $maxFileSize = null,
-        ?string $mimes = null
+        ?array $mimes = null
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            'mimes:'.($mimes ?? config('laravel-files.accept_file_mimes')),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_file_mimes')),
         );
     }
 
@@ -34,40 +36,17 @@ final class FileValidationHelper
         ?int $minHeight = null,
         ?int $maxWidth = null,
         ?int $maxHeight = null,
-        ?string $mimes = null
+        ?array $mimes = null
     ): array {
-        $dimensions = [];
-
-        if (! empty($width)) {
-            $dimensions[] = "width=$width";
-        } else {
-            if (! empty($minWidth)) {
-                $dimensions[] = "min_width=$minWidth";
-            }
-
-            $dimensions[] = ! empty($maxWidth)
-                ? "max_width=$maxWidth"
-                : 'max_width='.config('laravel-files.max_image_dimension');
-        }
-
-        if (! empty($height)) {
-            $dimensions[] = "height=$height";
-        } else {
-            if (! empty($minHeight)) {
-                $dimensions[] = "min_height=$minHeight";
-            }
-
-            $dimensions[] = ! empty($maxHeight)
-                ? "max_height=$maxHeight"
-                : 'max_height='.config('laravel-files.max_image_dimension');
-        }
-
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
             'image',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            'dimensions:'.implode(',', $dimensions),
-            'mimes:'.($mimes ?? config('laravel-files.accept_image_mimes')),
+            'dimensions:'.implode(',', [
+                ...self::getImageDimensionRules('width', $width, $minWidth, $maxWidth),
+                ...self::getImageDimensionRules('height', $height, $minHeight, $maxHeight),
+            ]),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_image_mimes')),
         );
     }
 
@@ -89,9 +68,37 @@ final class FileValidationHelper
         if (! empty($maxFileSize)) {
             $fileSizes[] = "max:$maxFileSize";
         } else {
-            $fileSizes[] = 'max:'.config('laravel-files.max_file_size');
+            $fileSizes[] = 'max:'.ceil(config('laravel-files.max_upload_file_size_bytes') / self::BYTES_IN_KILOBYTE);
         }
 
         return $fileSizes;
+    }
+
+    private static function getImageDimensionRules(
+        string $side,
+        ?int $exact,
+        ?int $min,
+        ?int $max
+    ): array {
+        if (! empty($exact)) {
+            return ["$side=$exact"];
+        }
+
+        $dimensions = [];
+
+        if (! empty($min)) {
+            $dimensions[] = "min_$side=$min";
+        }
+
+        $dimensions[] = ! empty($max)
+            ? "max_$side=$max"
+            : 'max_'.$side.'='.config('laravel-files.max_upload_image_side_pixels');
+
+        return $dimensions;
+    }
+
+    private static function getMimesRule(array $mimes): string
+    {
+        return 'mimes:'.implode(',', $mimes);
     }
 }
