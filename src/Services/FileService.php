@@ -21,28 +21,16 @@ use ValueError;
 
 class FileService
 {
-    private const FOLDER_ARCHIVE = 'archive';
-
-    private const FOLDER_AUDIO = 'audio';
-
     private const FOLDER_CACHE = 'cache';
-
-    private const FOLDER_DOCUMENT = 'document';
-
-    private const FOLDER_FILE = 'file';
-
-    private const FOLDER_IMAGE = 'image';
 
     private const FOLDER_SEEDER = 'seeder';
 
-    private const FOLDER_VIDEO = 'video';
-
     private const array AVIF_CONVERTIBLE_EXTENSIONS = [
-        'avif',
-        'jpeg',
-        'jpg',
-        'png',
-        'webp',
+        FileExtension::Avif,
+        FileExtension::Jpeg,
+        FileExtension::Jpg,
+        FileExtension::Png,
+        FileExtension::Webp,
     ];
 
     private array $deletedSeederFolders = [];
@@ -233,7 +221,7 @@ class FileService
             $parts[] = self::FOLDER_SEEDER;
         }
 
-        $parts[] = self::getStorageFolder($fileExtension);
+        $parts[] = $fileExtension->folder();
         $parts[] = slugify($folder);
 
         return self::path(...$parts);
@@ -241,7 +229,7 @@ class FileService
 
     private static function getCacheImageFolder(string|int|null $folder = null): string
     {
-        $parts = [self::FOLDER_CACHE, self::FOLDER_IMAGE];
+        $parts = [self::FOLDER_CACHE, FileExtension::FOLDER_IMAGE];
 
         if (filled($folder)) {
             $parts[] = slugify($folder);
@@ -250,60 +238,10 @@ class FileService
         return self::path(...$parts);
     }
 
-    private static function getStorageFolder(FileExtension $fileExtension): string
-    {
-        if (self::isImageExtension($fileExtension)) {
-            return self::FOLDER_IMAGE;
-        }
-
-        if (self::isDocumentExtension($fileExtension)) {
-            return self::FOLDER_DOCUMENT;
-        }
-
-        if (self::isVideoExtension($fileExtension)) {
-            return self::FOLDER_VIDEO;
-        }
-
-        if (self::isAudioExtension($fileExtension)) {
-            return self::FOLDER_AUDIO;
-        }
-
-        if (self::isArchiveExtension($fileExtension)) {
-            return self::FOLDER_ARCHIVE;
-        }
-
-        return self::FOLDER_FILE;
-    }
-
-    private static function isImageExtension(FileExtension $fileExtension): bool
-    {
-        return self::containsExtension(FileExtension::imageExtensions(), $fileExtension);
-    }
-
-    private static function isDocumentExtension(FileExtension $fileExtension): bool
-    {
-        return self::containsExtension(FileExtension::documentExtensions(), $fileExtension);
-    }
-
-    private static function isVideoExtension(FileExtension $fileExtension): bool
-    {
-        return self::containsExtension(FileExtension::videoExtensions(), $fileExtension);
-    }
-
-    private static function isAudioExtension(FileExtension $fileExtension): bool
-    {
-        return self::containsExtension(FileExtension::audioExtensions(), $fileExtension);
-    }
-
-    private static function isArchiveExtension(FileExtension $fileExtension): bool
-    {
-        return self::containsExtension(FileExtension::archiveExtensions(), $fileExtension);
-    }
-
     private static function isConvertibleToAvif(FileExtension $fileExtension): bool
     {
         return collect(self::AVIF_CONVERTIBLE_EXTENSIONS)
-            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension->value));
+            ->contains(fn (FileExtension $extension): bool => cmprenum($extension, $fileExtension));
     }
 
     private static function readFileContents(string $file): string
@@ -386,14 +324,7 @@ class FileService
 
     private static function getAcceptedExtensions(FileExtension $fileExtension): array
     {
-        return match (self::getStorageFolder($fileExtension)) {
-            self::FOLDER_ARCHIVE => self::normalizeExtensions(config('laravel-files.accept_archive_extensions')),
-            self::FOLDER_AUDIO => self::normalizeExtensions(config('laravel-files.accept_audio_extensions')),
-            self::FOLDER_DOCUMENT => self::normalizeExtensions(config('laravel-files.accept_document_extensions')),
-            self::FOLDER_IMAGE => self::normalizeExtensions(config('laravel-files.accept_image_extensions')),
-            self::FOLDER_VIDEO => self::normalizeExtensions(config('laravel-files.accept_video_extensions')),
-            default => self::normalizeExtensions(config('laravel-files.accept_file_extensions')),
-        };
+        return self::normalizeExtensions(config('laravel-files.accept_'.$fileExtension->folder().'_extensions'));
     }
 
     private static function normalizeExtensions(array $extensions): array

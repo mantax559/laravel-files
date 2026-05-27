@@ -10,6 +10,18 @@ enum FileExtension: string
 {
     use EnumTrait;
 
+    public const FOLDER_ARCHIVE = 'archive';
+
+    public const FOLDER_AUDIO = 'audio';
+
+    public const FOLDER_DOCUMENT = 'document';
+
+    public const FOLDER_FILE = 'file';
+
+    public const FOLDER_IMAGE = 'image';
+
+    public const FOLDER_VIDEO = 'video';
+
     case SevenZip = '7z';
     case Apng = 'apng';
     case Avif = 'avif';
@@ -176,5 +188,23 @@ enum FileExtension: string
             'video/x-msvideo' => self::Avi,
             'video/x-matroska' => self::Mkv,
         ][$mimeType] ?? throw new \ValueError("$mimeType is not a supported file MIME type");
+    }
+
+    public function folder(): string
+    {
+        return match (true) {
+            self::containsExtension(self::imageExtensions(), $this) => self::FOLDER_IMAGE,
+            self::containsExtension(self::documentExtensions(), $this) => self::FOLDER_DOCUMENT,
+            self::containsExtension(self::videoExtensions(), $this) => self::FOLDER_VIDEO,
+            self::containsExtension(self::audioExtensions(), $this) => self::FOLDER_AUDIO,
+            self::containsExtension(self::archiveExtensions(), $this) => self::FOLDER_ARCHIVE,
+            default => self::FOLDER_FILE,
+        };
+    }
+
+    private static function containsExtension(array $extensions, self $fileExtension): bool
+    {
+        return collect($extensions)
+            ->contains(fn (self $extension): bool => cmprenum($extension, $fileExtension));
     }
 }
