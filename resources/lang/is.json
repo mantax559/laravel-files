@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Ekki var hægt að lesa skrána. Gefðu upp gilda staðbundna slóð eða URL.",
+  "File does not exist: :path": "Skráin er ekki til: :path",
+  "The file could not be opened. Please try uploading it again.": "Ekki var hægt að opna skrána. Reyndu að hlaða henni upp aftur.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Upphlaðna skráin er of stór. Hámarksleyfileg stærð er :max_size, raunveruleg stærð er :actual_size.",
+  "The file extension could not be detected.": "Ekki var hægt að greina skráarendinguna.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Greinda MIME-gerðin :mime er ekki studd. Samþykkt snið: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Skráarsniðið :extension er ekki leyft. Samþykkt :folder-snið: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Skráarendingin :extension er ekki studd. Samþykkt snið: :extensions.",
+  "The uploaded file is not a valid image.": "Upphlaðna skráin er ekki gild mynd.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Upplausn myndarinnar er of mikil. Hámarksleyfileg hlið er :max_sidepx, raunveruleg upplausn er :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Vistaða skráin er of stór. Hámarksleyfileg stærð er :max_size, raunveruleg stærð er :actual_size."
+}

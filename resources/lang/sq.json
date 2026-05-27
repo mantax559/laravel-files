@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Skedari nuk mund të lexohej. Jepni një shteg lokal ose URL të vlefshme.",
+  "File does not exist: :path": "Skedari nuk ekziston: :path",
+  "The file could not be opened. Please try uploading it again.": "Skedari nuk mund të hapej. Provoni ta ngarkoni përsëri.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Skedari i ngarkuar është shumë i madh. Madhësia maksimale e lejuar është :max_size, madhësia aktuale është :actual_size.",
+  "The file extension could not be detected.": "Zgjatimi i skedarit nuk mund të zbulohej.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Lloji MIME i zbuluar :mime nuk mbështetet. Formatet e pranuara: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Formati i skedarit :extension nuk lejohet. Formatet :folder të pranuara: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Zgjatimi i skedarit :extension nuk mbështetet. Formatet e pranuara: :extensions.",
+  "The uploaded file is not a valid image.": "Skedari i ngarkuar nuk është një imazh i vlefshëm.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Rezolucioni i imazhit është shumë i madh. Ana maksimale e lejuar është :max_sidepx, rezolucioni aktual është :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Skedari i ruajtur është shumë i madh. Madhësia maksimale e lejuar është :max_size, madhësia aktuale është :actual_size."
+}

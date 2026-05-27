@@ -317,7 +317,7 @@ final class FileServiceTest extends TestCase
         }
 
         try {
-            $mimeExtension->invoke(null, random_bytes(32));
+            $mimeExtension->invoke(null, str_repeat(chr(0), 32));
             $this->fail('Expected MIME exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertStringContainsString('MIME type', $exception->getMessage());

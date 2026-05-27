@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Չհաջողվեց կարդալ ֆայլը։ Նշեք վավեր տեղային ուղի կամ URL։",
+  "File does not exist: :path": "Ֆայլը գոյություն չունի՝ :path",
+  "The file could not be opened. Please try uploading it again.": "Չհաջողվեց բացել ֆայլը։ Խնդրում ենք կրկին վերբեռնել այն։",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Վերբեռնված ֆայլը չափազանց մեծ է։ Առավելագույն թույլատրելի չափը՝ :max_size, իրական չափը՝ :actual_size։",
+  "The file extension could not be detected.": "Չհաջողվեց հայտնաբերել ֆայլի ընդլայնումը։",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Հայտնաբերված MIME տիպը :mime չի աջակցվում։ Ընդունելի ձևաչափեր՝ :extensions։",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Ֆայլի :extension ձևաչափը թույլատրված չէ։ Ընդունելի :folder ձևաչափեր՝ :extensions։",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Ֆայլի :extension ընդլայնումը չի աջակցվում։ Ընդունելի ձևաչափեր՝ :extensions։",
+  "The uploaded file is not a valid image.": "Վերբեռնված ֆայլը վավեր պատկեր չէ։",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Պատկերի լուծաչափը չափազանց մեծ է։ Առավելագույն թույլատրելի կողմը՝ :max_sidepx, իրական լուծաչափը՝ :widthx:heightpx։",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Պահված ֆայլը չափազանց մեծ է։ Առավելագույն թույլատրելի չափը՝ :max_size, իրական չափը՝ :actual_size։"
+}

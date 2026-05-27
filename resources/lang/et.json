@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Faili ei õnnestunud lugeda. Sisestage korrektne kohalik tee või URL.",
+  "File does not exist: :path": "Faili ei ole olemas: :path",
+  "The file could not be opened. Please try uploading it again.": "Faili ei õnnestunud avada. Proovige see uuesti üles laadida.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Üles laaditud fail on liiga suur. Maksimaalne lubatud suurus on :max_size, tegelik suurus on :actual_size.",
+  "The file extension could not be detected.": "Faililaiendit ei õnnestunud tuvastada.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Tuvastatud MIME tüüp :mime ei ole toetatud. Lubatud vormingud: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": ":extension failivorming ei ole lubatud. Lubatud :folder vormingud: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": ":extension faililaiend ei ole toetatud. Lubatud vormingud: :extensions.",
+  "The uploaded file is not a valid image.": "Üles laaditud fail ei ole kehtiv pilt.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Pildi eraldusvõime on liiga suur. Maksimaalne lubatud külg on :max_sidepx, tegelik eraldusvõime on :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Salvestatud fail on liiga suur. Maksimaalne lubatud suurus on :max_size, tegelik suurus on :actual_size."
+}

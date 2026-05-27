@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Failu neizdevās nolasīt. Norādiet derīgu lokālo ceļu vai URL.",
+  "File does not exist: :path": "Fails neeksistē: :path",
+  "The file could not be opened. Please try uploading it again.": "Failu neizdevās atvērt. Lūdzu, mēģiniet to augšupielādēt vēlreiz.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Augšupielādētais fails ir pārāk liels. Maksimālais atļautais izmērs ir :max_size, faktiskais izmērs ir :actual_size.",
+  "The file extension could not be detected.": "Faila paplašinājumu neizdevās noteikt.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Noteiktais MIME tips :mime netiek atbalstīts. Pieņemtie formāti: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": ":extension faila formāts nav atļauts. Pieņemtie :folder formāti: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": ":extension faila paplašinājums netiek atbalstīts. Pieņemtie formāti: :extensions.",
+  "The uploaded file is not a valid image.": "Augšupielādētais fails nav derīgs attēls.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Attēla izšķirtspēja ir pārāk liela. Maksimālā atļautā mala ir :max_sidepx, faktiskā izšķirtspēja ir :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Saglabātais fails ir pārāk liels. Maksimālais atļautais izmērs ir :max_size, faktiskais izmērs ir :actual_size."
+}

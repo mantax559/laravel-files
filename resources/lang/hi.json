@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "फ़ाइल पढ़ी नहीं जा सकी। कृपया मान्य स्थानीय पथ या URL दें।",
+  "File does not exist: :path": "फ़ाइल मौजूद नहीं है: :path",
+  "The file could not be opened. Please try uploading it again.": "फ़ाइल खोली नहीं जा सकी। कृपया इसे फिर से अपलोड करें।",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "अपलोड की गई फ़ाइल बहुत बड़ी है। अधिकतम अनुमत आकार :max_size है, वास्तविक आकार :actual_size है।",
+  "The file extension could not be detected.": "फ़ाइल एक्सटेंशन का पता नहीं लगाया जा सका।",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "पहचाना गया MIME प्रकार :mime समर्थित नहीं है। स्वीकृत प्रारूप: :extensions।",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "फ़ाइल प्रारूप :extension की अनुमति नहीं है। स्वीकृत :folder प्रारूप: :extensions।",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "फ़ाइल एक्सटेंशन :extension समर्थित नहीं है। स्वीकृत प्रारूप: :extensions।",
+  "The uploaded file is not a valid image.": "अपलोड की गई फ़ाइल मान्य छवि नहीं है।",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "छवि रिज़ॉल्यूशन बहुत बड़ा है। अधिकतम अनुमत साइड :max_sidepx है, वास्तविक रिज़ॉल्यूशन :widthx:heightpx है।",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "सहेजी गई फ़ाइल बहुत बड़ी है। अधिकतम अनुमत आकार :max_size है, वास्तविक आकार :actual_size है।"
+}

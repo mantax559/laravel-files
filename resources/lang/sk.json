@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Súbor sa nepodarilo prečítať. Zadajte platnú lokálnu cestu alebo URL.",
+  "File does not exist: :path": "Súbor neexistuje: :path",
+  "The file could not be opened. Please try uploading it again.": "Súbor sa nepodarilo otvoriť. Skúste ho nahrať znova.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Nahraný súbor je príliš veľký. Maximálna povolená veľkosť je :max_size, skutočná veľkosť je :actual_size.",
+  "The file extension could not be detected.": "Príponu súboru sa nepodarilo zistiť.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Zistený MIME typ :mime nie je podporovaný. Akceptované formáty: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Formát súboru :extension nie je povolený. Akceptované formáty :folder: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Prípona súboru :extension nie je podporovaná. Akceptované formáty: :extensions.",
+  "The uploaded file is not a valid image.": "Nahraný súbor nie je platný obrázok.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Rozlíšenie obrázka je príliš veľké. Maximálna povolená strana je :max_sidepx, skutočné rozlíšenie je :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Uložený súbor je príliš veľký. Maximálna povolená veľkosť je :max_size, skutočná veľkosť je :actual_size."
+}

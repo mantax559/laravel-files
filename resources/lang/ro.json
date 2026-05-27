@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Fișierul nu a putut fi citit. Furnizați o cale locală validă sau un URL valid.",
+  "File does not exist: :path": "Fișierul nu există: :path",
+  "The file could not be opened. Please try uploading it again.": "Fișierul nu a putut fi deschis. Încercați să îl încărcați din nou.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Fișierul încărcat este prea mare. Dimensiunea maximă permisă este :max_size, dimensiunea reală este :actual_size.",
+  "The file extension could not be detected.": "Extensia fișierului nu a putut fi detectată.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Tipul MIME detectat :mime nu este acceptat. Formate acceptate: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Formatul fișierului :extension nu este permis. Formate :folder acceptate: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Extensia fișierului :extension nu este acceptată. Formate acceptate: :extensions.",
+  "The uploaded file is not a valid image.": "Fișierul încărcat nu este o imagine validă.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Rezoluția imaginii este prea mare. Latura maximă permisă este :max_sidepx, rezoluția reală este :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Fișierul salvat este prea mare. Dimensiunea maximă permisă este :max_size, dimensiunea reală este :actual_size."
+}
