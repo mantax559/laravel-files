@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Intervention\Image\Drivers\Vips\Driver;
 
 final class AppServiceProvider extends ServiceProvider
 {
-    private const string IMAGE_DRIVER = 'Intervention\\Image\\Drivers\\Vips\\Driver';
-
     private const string PATH_CONFIG = __DIR__.'/../../config/laravel-files.php';
 
     private const string PATH_MIGRATIONS = __DIR__.'/../../database/migrations';
@@ -29,6 +28,6 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(self::PATH_CONFIG, 'laravel-files');
-        config(['image.driver' => self::IMAGE_DRIVER]);
+        config(['image.driver' => Driver::class]);
     }
 }

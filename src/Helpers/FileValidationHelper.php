@@ -165,9 +165,15 @@ final class FileValidationHelper
 
     private static function getMimeValues(array $mimes): array
     {
-        return collect($mimes)
-            ->map(fn (FileExtension|string $mime): string => $mime instanceof FileExtension ? $mime->value : strtolower($mime))
-            ->all();
+        $mimeValues = [];
+
+        foreach ($mimes as $mime) {
+            $mimeValues[] = $mime instanceof FileExtension
+                ? $mime->value
+                : format_string($mime, 3);
+        }
+
+        return $mimeValues;
     }
 
     private static function getAllAcceptedExtensions(): array

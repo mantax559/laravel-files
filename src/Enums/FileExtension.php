@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Enums;
 
 use Mantax559\LaravelHelpers\Traits\EnumTrait;
+use ValueError;
 
 enum FileExtension: string
 {
@@ -187,7 +188,7 @@ enum FileExtension: string
             'video/webm' => self::Webm,
             'video/x-matroska' => self::Mkv,
             'video/x-msvideo' => self::Avi,
-        ][$mimeType] ?? throw new \ValueError("$mimeType is not a supported file MIME type");
+        ][$mimeType] ?? throw new ValueError("$mimeType is not a supported file MIME type");
     }
 
     public function folder(): string
@@ -204,7 +205,12 @@ enum FileExtension: string
 
     private static function containsExtension(array $extensions, self $fileExtension): bool
     {
-        return collect($extensions)
-            ->contains(fn (self $extension): bool => cmprenum($extension, $fileExtension));
+        foreach ($extensions as $extension) {
+            if (cmprenum($extension, $fileExtension)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

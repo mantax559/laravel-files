@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
+use finfo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -44,7 +45,10 @@ class FileService
     public function save(string $file, string $folder): string
     {
         if (! is_file($file) && ! is_url($file)) {
-            throw new UserFriendlyException(__('Bad file format!'));
+            throw new UserFriendlyException(__(
+                'The file could not be read. Provide a local path or URL with one of these extensions: :extensions.',
+                ['extensions' => self::getAcceptedExtensionsText()]
+            ));
         }
 
         $fileContents = self::readFileContents($file);
@@ -60,7 +64,7 @@ class FileService
         self::ensureFileSize(
             $fileContents,
             config('laravel-files.max_file_size_bytes'),
-            __('File is too large!')
+            'The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.'
         );
 
         $this->deleteSeederFolder($fileExtension, $folder);
@@ -85,13 +89,18 @@ class FileService
         array $sizes,
         string|int|null $folder = null
     ): array {
-        return collect($sizes)
-            ->map(fn (array $size): string => $this->cacheImage(
+        $cachedImages = [];
+
+        foreach ($sizes as $size) {
+            $cachedImages[] = $this->cacheImage(
                 $sourcePath,
                 $size['width'],
                 $size['height'],
                 $folder
-            ))->all();
+            );
+        }
+
+        return $cachedImages;
     }
 
     public function cacheImage(
@@ -202,11 +211,10 @@ class FileService
 
         $folderPath = $this->getStorageFolderPath($fileExtension, $folder);
 
-        if (
-            collect($this->deletedSeederFolders)
-                ->contains(fn (string $deletedFolder): bool => cmprstr($deletedFolder, $folderPath))
-        ) {
-            return;
+        foreach ($this->deletedSeederFolders as $deletedSeederFolder) {
+            if (cmprstr($deletedSeederFolder, $folderPath)) {
+                return;
+            }
         }
 
         Storage::disk(config('laravel-files.disk'))->deleteDirectory($folderPath);
@@ -240,8 +248,13 @@ class FileService
 
     private static function isConvertibleToAvif(FileExtension $fileExtension): bool
     {
-        return collect(self::AVIF_CONVERTIBLE_EXTENSIONS)
-            ->contains(fn (FileExtension $extension): bool => cmprenum($extension, $fileExtension));
+        foreach (self::AVIF_CONVERTIBLE_EXTENSIONS as $extension) {
+            if (cmprenum($extension, $fileExtension)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function readFileContents(string $file): string
@@ -249,7 +262,10 @@ class FileService
         $handle = fopen($file, 'rb');
 
         if (! $handle) {
-            throw new UserFriendlyException(__('Bad file format!'));
+            throw new UserFriendlyException(__(
+                'The file could not be opened. Accepted formats: :extensions.',
+                ['extensions' => self::getAcceptedExtensionsText()]
+            ));
         }
 
         $contents = '';
@@ -260,7 +276,10 @@ class FileService
             if (! is_string($chunk)) {
                 fclose($handle);
 
-                throw new UserFriendlyException(__('Bad file format!'));
+                throw new UserFriendlyException(__(
+                    'The file could not be read. Accepted formats: :extensions.',
+                    ['extensions' => self::getAcceptedExtensionsText()]
+                ));
             }
 
             $contents .= $chunk;
@@ -268,7 +287,7 @@ class FileService
             self::ensureFileSize(
                 $contents,
                 config('laravel-files.max_upload_file_size_bytes'),
-                __('Uploaded file is too large!')
+                'The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.'
             );
         }
 
@@ -289,28 +308,40 @@ class FileService
     private static function getPathExtension(string $path): FileExtension
     {
         $path = parse_url($path, PHP_URL_PATH) ?: $path;
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $extension = format_string(pathinfo($path, PATHINFO_EXTENSION), 3);
 
         if (! empty($extension)) {
             return self::getEnumExtension($extension);
         }
 
-        throw new UserFriendlyException(__('Bad file format!'));
+        throw new UserFriendlyException(__(
+            'The file extension could not be detected. Accepted formats: :extensions.',
+            ['extensions' => self::getAcceptedExtensionsText()]
+        ));
     }
 
     private static function getFileExtensionFromMime(string $fileContents): FileExtension
     {
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
 
         if (is_string($mime)) {
             try {
                 return FileExtension::getByMimeType($mime);
             } catch (ValueError) {
-                throw new UserFriendlyException(__('Bad file format!'));
+                throw new UserFriendlyException(__(
+                    'The detected MIME type :mime is not supported. Accepted formats: :extensions.',
+                    [
+                        'mime' => $mime,
+                        'extensions' => self::getAcceptedExtensionsText(),
+                    ]
+                ));
             }
         }
 
-        throw new UserFriendlyException(__('Bad file format!'));
+        throw new UserFriendlyException(__(
+            'The file MIME type could not be detected. Accepted formats: :extensions.',
+            ['extensions' => self::getAcceptedExtensionsText()]
+        ));
     }
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
@@ -319,7 +350,14 @@ class FileService
             return;
         }
 
-        throw new UserFriendlyException(__('Bad file format!'));
+        throw new UserFriendlyException(__(
+            'The :extension file format is not allowed. Accepted :folder formats: :extensions.',
+            [
+                'extension' => $fileExtension->value,
+                'folder' => $fileExtension->folder(),
+                'extensions' => self::getAcceptedExtensionsText($fileExtension),
+            ]
+        ));
     }
 
     private static function getAcceptedExtensions(FileExtension $fileExtension): array
@@ -329,9 +367,13 @@ class FileService
 
     private static function normalizeExtensions(array $extensions): array
     {
-        return collect($extensions)
-            ->map(fn (FileExtension|string $extension): FileExtension => self::normalizeExtension($extension))
-            ->all();
+        $normalizedExtensions = [];
+
+        foreach ($extensions as $extension) {
+            $normalizedExtensions[] = self::normalizeExtension($extension);
+        }
+
+        return $normalizedExtensions;
     }
 
     private static function normalizeExtension(FileExtension|string $extension): FileExtension
@@ -340,22 +382,33 @@ class FileService
             return $extension;
         }
 
-        return self::getEnumExtension($extension);
+        return self::getEnumExtension(format_string($extension, 3) ?? '');
     }
 
     private static function getEnumExtension(string $extension): FileExtension
     {
         try {
-            return FileExtension::getEnumByString(strtolower($extension));
+            return FileExtension::getEnumByString(format_string($extension, 3) ?? '');
         } catch (ValueError) {
-            throw new UserFriendlyException(__('Bad file format!'));
+            throw new UserFriendlyException(__(
+                'The :extension file extension is not supported. Accepted formats: :extensions.',
+                [
+                    'extension' => $extension,
+                    'extensions' => self::getAcceptedExtensionsText(),
+                ]
+            ));
         }
     }
 
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
     {
-        return collect($extensions)
-            ->contains(fn (FileExtension $extension): bool => cmprenum($extension, $fileExtension));
+        foreach ($extensions as $extension) {
+            if (cmprenum($extension, $fileExtension)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function ensureImageUploadDimensions(string $fileContents): void
@@ -363,14 +416,24 @@ class FileService
         $imageSize = getimagesizefromstring($fileContents);
 
         if (! is_array($imageSize)) {
-            throw new UserFriendlyException(__('Bad file format!'));
+            throw new UserFriendlyException(__(
+                'The file is not a valid image. Accepted image formats: :extensions.',
+                ['extensions' => self::getAcceptedExtensionsText(FileExtension::Avif)]
+            ));
         }
 
         if (
             is_more($imageSize[0], config('laravel-files.max_upload_image_side_pixels'))
             || is_more($imageSize[1], config('laravel-files.max_upload_image_side_pixels'))
         ) {
-            throw new UserFriendlyException(__('Image resolution is too large!'));
+            throw new UserFriendlyException(__(
+                'The image resolution is too large. Maximum allowed side is :max_side px, actual resolution is :width x :height px.',
+                [
+                    'max_side' => config('laravel-files.max_upload_image_side_pixels'),
+                    'width' => $imageSize[0],
+                    'height' => $imageSize[1],
+                ]
+            ));
         }
     }
 
@@ -395,9 +458,36 @@ class FileService
 
     private static function ensureFileSize(string $fileContents, int|float|string $maxSize, string $message): void
     {
-        if (is_more(strlen($fileContents), $maxSize)) {
-            throw new UserFriendlyException($message);
+        $actualSize = strlen($fileContents);
+
+        if (is_more($actualSize, $maxSize)) {
+            throw new UserFriendlyException(__($message, [
+                'actual_size' => bytes_conversion($actualSize),
+                'max_size' => bytes_conversion((float) $maxSize),
+            ]));
         }
+    }
+
+    private static function getAcceptedExtensionsText(?FileExtension $fileExtension = null): string
+    {
+        $extensions = $fileExtension
+            ? self::getAcceptedExtensions($fileExtension)
+            : [
+                ...self::normalizeExtensions(config('laravel-files.accept_archive_extensions')),
+                ...self::normalizeExtensions(config('laravel-files.accept_audio_extensions')),
+                ...self::normalizeExtensions(config('laravel-files.accept_document_extensions')),
+                ...self::normalizeExtensions(config('laravel-files.accept_image_extensions')),
+                ...self::normalizeExtensions(config('laravel-files.accept_video_extensions')),
+                ...self::normalizeExtensions(config('laravel-files.accept_file_extensions')),
+            ];
+
+        $values = [];
+
+        foreach ($extensions as $extension) {
+            $values[] = $extension->value;
+        }
+
+        return implode(', ', $values);
     }
 
     private static function path(string ...$parts): string
