@@ -11,9 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
-use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
-use Mantax559\LaravelFiles\Enums\FileType;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -25,9 +23,25 @@ class FileService
 
     private const FOLDER_DOCUMENT = 'document';
 
+    private const FOLDER_FILE = 'file';
+
     private const FOLDER_IMAGE = 'image';
 
     private const FOLDER_SEEDER = 'seeder';
+
+    private const EXTENSION_PDF = 'pdf';
+
+    private const EXTENSION_WEBP = 'webp';
+
+    private const array MIME_EXTENSIONS = [
+        'application/pdf' => 'pdf',
+        'image/avif' => 'avif',
+        'image/gif' => 'gif',
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/svg+xml' => 'svg',
+        'image/webp' => 'webp',
+    ];
 
     private const array WEBP_CONVERTIBLE_EXTENSIONS = [
         'jpeg',
@@ -36,41 +50,13 @@ class FileService
         'webp',
     ];
 
+    private array $deletedSeederFolders = [];
+
     private array $tempFiles = [];
 
-    private string $filePath = '';
-
     public function __construct(
-        private FileType $fileType = FileType::Image,
-        private FileSource $fileSource = FileSource::Manual,
-        private FileExtension $fileExtension = FileExtension::Png
-    ) {
-        $folders = [];
-
-        if (cmprenum($this->fileSource, FileSource::Seeder)) {
-            $folders[] = self::FOLDER_SEEDER;
-        }
-
-        $folders[] = match ($this->fileExtension) {
-            FileExtension::Gif,
-            FileExtension::Jpeg,
-            FileExtension::Jpg,
-            FileExtension::Png,
-            FileExtension::Webp => self::FOLDER_IMAGE,
-            FileExtension::Pdf => self::FOLDER_DOCUMENT,
-            default => throw new RuntimeException(__(
-                'Unsupported file extension: :extension',
-                ['extension' => $this->fileExtension->value]
-            )),
-        };
-
-        $folders[] = $this->fileType->value;
-        $this->filePath = self::path(...$folders);
-
-        if (cmprenum($this->fileSource, FileSource::Seeder)) {
-            Storage::disk(config('laravel-files.disk'))->deleteDirectory($this->filePath);
-        }
-    }
+        private FileSource $fileSource = FileSource::Manual
+    ) {}
 
     public function save(string $file, string $folder): string
     {
@@ -79,12 +65,12 @@ class FileService
         }
 
         $fileContents = self::readFileContents($file);
-        $fileExtension = $this->fileExtension->value;
+        $fileExtension = self::getFileExtension($file, $fileContents);
 
-        if ($this->isConvertibleToWebp()) {
+        if (self::isConvertibleToWebp($fileExtension)) {
             self::ensureImageUploadDimensions($fileContents);
             $fileContents = self::prepareImageForStorage($fileContents);
-            $fileExtension = FileExtension::Webp->value;
+            $fileExtension = self::EXTENSION_WEBP;
         }
 
         self::ensureFileSize(
@@ -93,9 +79,10 @@ class FileService
             __('File is too large!')
         );
 
+        $this->deleteSeederFolder($fileExtension, $folder);
+
         $filePath = self::path(
-            $this->filePath,
-            slugify($folder),
+            $this->getStorageFolderPath($fileExtension, $folder),
             Str::uuid7()->toString().'.'.$fileExtension
         );
 
@@ -112,7 +99,6 @@ class FileService
     public function cacheImages(
         string $sourcePath,
         array $sizes,
-        ?FileType $fileType = null,
         string|int|null $folder = null
     ): array {
         return collect($sizes)
@@ -120,7 +106,6 @@ class FileService
                 $sourcePath,
                 $size['width'],
                 $size['height'],
-                $fileType,
                 $folder
             ))->all();
     }
@@ -129,7 +114,6 @@ class FileService
         string $sourcePath,
         int $width,
         int $height,
-        ?FileType $fileType = null,
         string|int|null $folder = null
     ): string {
         if (! Storage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
@@ -137,9 +121,10 @@ class FileService
         }
 
         $sourceInfo = pathinfo($sourcePath);
+        $sourceExtension = self::getPathExtension($sourcePath);
         $cachePath = self::path(
-            self::getCacheImageFolder($fileType, $folder),
-            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension']
+            self::getCacheImageFolder($folder),
+            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceExtension
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
@@ -147,7 +132,7 @@ class FileService
 
             Storage::disk(config('laravel-files.image_cache_disk'))->put(
                 $cachePath,
-                $image->encodeUsingFileExtension($sourceInfo['extension'], quality: config('laravel-files.image_cache_quality'))
+                $image->encodeUsingFileExtension($sourceExtension, quality: config('laravel-files.image_cache_quality'))
             );
         }
 
@@ -213,7 +198,7 @@ class FileService
         }
 
         if ($model) {
-            Storage::disk(config('laravel-files.image_cache_disk'))->deleteDirectory(self::getCacheImageFolder($this->fileType, $model->getKey()));
+            Storage::disk(config('laravel-files.image_cache_disk'))->deleteDirectory(self::getCacheImageFolder($model->getKey()));
         }
 
         $this->tempFiles[] = [
@@ -225,13 +210,42 @@ class FileService
         return Storage::disk(config('laravel-files.disk'))->delete($filePath);
     }
 
-    private static function getCacheImageFolder(?FileType $fileType = null, string|int|null $folder = null): string
+    private function deleteSeederFolder(string $fileExtension, string $folder): void
     {
-        $parts = [self::FOLDER_IMAGE, self::FOLDER_CACHE];
-
-        if ($fileType) {
-            $parts[] = $fileType->value;
+        if (! cmprenum($this->fileSource, FileSource::Seeder)) {
+            return;
         }
+
+        $folderPath = $this->getStorageFolderPath($fileExtension, $folder);
+
+        if (
+            collect($this->deletedSeederFolders)
+                ->contains(fn (string $deletedFolder): bool => cmprstr($deletedFolder, $folderPath))
+        ) {
+            return;
+        }
+
+        Storage::disk(config('laravel-files.disk'))->deleteDirectory($folderPath);
+        $this->deletedSeederFolders[] = $folderPath;
+    }
+
+    private function getStorageFolderPath(string $fileExtension, string $folder): string
+    {
+        $parts = [];
+
+        if (cmprenum($this->fileSource, FileSource::Seeder)) {
+            $parts[] = self::FOLDER_SEEDER;
+        }
+
+        $parts[] = self::getStorageFolder($fileExtension);
+        $parts[] = slugify($folder);
+
+        return self::path(...$parts);
+    }
+
+    private static function getCacheImageFolder(string|int|null $folder = null): string
+    {
+        $parts = [self::FOLDER_CACHE, self::FOLDER_IMAGE];
 
         if (filled($folder)) {
             $parts[] = slugify($folder);
@@ -240,10 +254,29 @@ class FileService
         return self::path(...$parts);
     }
 
-    private function isConvertibleToWebp(): bool
+    private static function getStorageFolder(string $fileExtension): string
+    {
+        if (self::isImageExtension($fileExtension)) {
+            return self::FOLDER_IMAGE;
+        }
+
+        if (cmprstr($fileExtension, self::EXTENSION_PDF)) {
+            return self::FOLDER_DOCUMENT;
+        }
+
+        return self::FOLDER_FILE;
+    }
+
+    private static function isImageExtension(string $fileExtension): bool
+    {
+        return collect(config('laravel-files.accept_image_mimes'))
+            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension));
+    }
+
+    private static function isConvertibleToWebp(string $fileExtension): bool
     {
         return collect(self::WEBP_CONVERTIBLE_EXTENSIONS)
-            ->contains(fn (string $extension): bool => cmprstr($extension, $this->fileExtension->value));
+            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension));
     }
 
     private static function readFileContents(string $file): string
@@ -279,6 +312,38 @@ class FileService
         return $contents;
     }
 
+    private static function getFileExtension(string $file, string $fileContents): string
+    {
+        try {
+            return self::getPathExtension($file);
+        } catch (UserFriendlyException) {
+            return self::getFileExtensionFromMime($fileContents);
+        }
+    }
+
+    private static function getPathExtension(string $path): string
+    {
+        $path = parse_url($path, PHP_URL_PATH) ?: $path;
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if (! empty($extension)) {
+            return $extension;
+        }
+
+        throw new UserFriendlyException(__('Bad file format!'));
+    }
+
+    private static function getFileExtensionFromMime(string $fileContents): string
+    {
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
+
+        if (is_string($mime) && isset(self::MIME_EXTENSIONS[$mime])) {
+            return self::MIME_EXTENSIONS[$mime];
+        }
+
+        throw new UserFriendlyException(__('Bad file format!'));
+    }
+
     private static function ensureImageUploadDimensions(string $fileContents): void
     {
         $imageSize = getimagesizefromstring($fileContents);
@@ -308,10 +373,10 @@ class FileService
                 : $image->scale(height: config('laravel-files.max_image_side_pixels'));
         }
 
-        return (string) $image->encodeUsingFileExtension(
-            FileExtension::Webp->value,
+        return $image->encodeUsingFileExtension(
+            self::EXTENSION_WEBP,
             quality: config('laravel-files.image_cache_quality')
-        );
+        )->toString();
     }
 
     private static function ensureFileSize(string $fileContents, int|float|string $maxSize, string $message): void
