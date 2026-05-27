@@ -10,18 +10,10 @@ enum FileExtension: string
 {
     use EnumTrait;
 
-    case Csv = 'csv';
-    case Doc = 'doc';
-    case Docx = 'docx';
     case Gif = 'gif';
     case Jpeg = 'jpeg';
     case Jpg = 'jpg';
     case Pdf = 'pdf';
     case Png = 'png';
-    case Txt = 'txt';
     case Webp = 'webp';
-    case Xls = 'xls';
-    case Xlsx = 'xlsx';
-    case Xml = 'xml';
-    case Zip = 'zip';
 }

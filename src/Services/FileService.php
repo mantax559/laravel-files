@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
+use Mantax559\LaravelFiles\Enums\FileFolder;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Enums\FileType;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -28,13 +30,20 @@ class FileService
         private FileExtension $fileExtension = FileExtension::Png
     ) {
         if (cmprenum($this->fileSource, FileSource::Seeder)) {
-            $this->filePath .= 'seeder/';
+            $this->filePath .= self::folderPath(FileFolder::Seeder);
         }
 
         $this->filePath .= match ($this->fileExtension) {
-            FileExtension::Gif, FileExtension::Jpeg, FileExtension::Jpg, FileExtension::Png, FileExtension::Webp => 'image/',
-            FileExtension::Pdf => 'document/',
-            default => 'file/',
+            FileExtension::Gif,
+            FileExtension::Jpeg,
+            FileExtension::Jpg,
+            FileExtension::Png,
+            FileExtension::Webp => self::folderPath(FileFolder::Image),
+            FileExtension::Pdf => self::folderPath(FileFolder::Document),
+            default => throw new RuntimeException(__(
+                'Unsupported file extension: :extension',
+                ['extension' => $this->fileExtension->value]
+            )),
         };
 
         $this->filePath .= $this->fileType->value.'/';
@@ -196,5 +205,10 @@ class FileService
         }
 
         return implode('/', $parts);
+    }
+
+    private static function folderPath(FileFolder $folder): string
+    {
+        return $folder->value.'/';
     }
 }
