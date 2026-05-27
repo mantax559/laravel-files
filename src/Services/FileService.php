@@ -29,6 +29,13 @@ class FileService
 
     private const FOLDER_SEEDER = 'seeder';
 
+    private const array WEBP_CONVERTIBLE_EXTENSIONS = [
+        'jpeg',
+        'jpg',
+        'png',
+        'webp',
+    ];
+
     private array $tempFiles = [];
 
     private string $filePath = '';
@@ -71,13 +78,28 @@ class FileService
             throw new UserFriendlyException(__('Bad file format!'));
         }
 
+        $fileContents = self::readFileContents($file);
+        $fileExtension = $this->fileExtension->value;
+
+        if ($this->isConvertibleToWebp()) {
+            self::ensureImageUploadDimensions($fileContents);
+            $fileContents = self::prepareImageForStorage($fileContents);
+            $fileExtension = FileExtension::Webp->value;
+        }
+
+        self::ensureFileSize(
+            $fileContents,
+            config('laravel-files.max_file_size_bytes'),
+            __('File is too large!')
+        );
+
         $filePath = self::path(
             $this->filePath,
             slugify($folder),
-            Str::uuid7()->toString().'.'.$this->fileExtension->value
+            Str::uuid7()->toString().'.'.$fileExtension
         );
 
-        Storage::disk(config('laravel-files.disk'))->put($filePath, file_get_contents($file));
+        Storage::disk(config('laravel-files.disk'))->put($filePath, $fileContents);
 
         $this->tempFiles[] = [
             'file_path' => $filePath,
@@ -182,7 +204,7 @@ class FileService
 
     private function delete(?string $filePath, ?Model $model = null): bool
     {
-        if (blank($filePath)) {
+        if (empty($filePath)) {
             return false;
         }
 
@@ -216,6 +238,87 @@ class FileService
         }
 
         return self::path(...$parts);
+    }
+
+    private function isConvertibleToWebp(): bool
+    {
+        return collect(self::WEBP_CONVERTIBLE_EXTENSIONS)
+            ->contains(fn (string $extension): bool => cmprstr($extension, $this->fileExtension->value));
+    }
+
+    private static function readFileContents(string $file): string
+    {
+        $handle = fopen($file, 'rb');
+
+        if (! $handle) {
+            throw new UserFriendlyException(__('Bad file format!'));
+        }
+
+        $contents = '';
+
+        while (! feof($handle)) {
+            $chunk = fread($handle, 1024 * 1024);
+
+            if (! is_string($chunk)) {
+                fclose($handle);
+
+                throw new UserFriendlyException(__('Bad file format!'));
+            }
+
+            $contents .= $chunk;
+
+            self::ensureFileSize(
+                $contents,
+                config('laravel-files.max_upload_file_size_bytes'),
+                __('Uploaded file is too large!')
+            );
+        }
+
+        fclose($handle);
+
+        return $contents;
+    }
+
+    private static function ensureImageUploadDimensions(string $fileContents): void
+    {
+        $imageSize = getimagesizefromstring($fileContents);
+
+        if (! is_array($imageSize)) {
+            throw new UserFriendlyException(__('Bad file format!'));
+        }
+
+        if (
+            is_more($imageSize[0], config('laravel-files.max_upload_image_side_pixels'))
+            || is_more($imageSize[1], config('laravel-files.max_upload_image_side_pixels'))
+        ) {
+            throw new UserFriendlyException(__('Image resolution is too large!'));
+        }
+    }
+
+    private static function prepareImageForStorage(string $fileContents): string
+    {
+        $image = Image::decodeBinary($fileContents);
+
+        if (
+            is_more($image->width(), config('laravel-files.max_image_side_pixels'))
+            || is_more($image->height(), config('laravel-files.max_image_side_pixels'))
+        ) {
+            $image = is_more($image->width(), $image->height())
+                ? $image->scale(width: config('laravel-files.max_image_side_pixels'))
+                : $image->scale(height: config('laravel-files.max_image_side_pixels'));
+        }
+
+        return (string) $image->encodeUsingFileExtension(
+            FileExtension::Webp->value,
+            quality: config('laravel-files.image_cache_quality')
+        );
+    }
+
+    private static function ensureFileSize(string $fileContents, int|float|string $maxSize, string $message): void
+    {
+        if (is_more(strlen($fileContents), $maxSize)) {
+            throw new UserFriendlyException($message);
+        }
     }
 
     private static function path(string ...$parts): string
