@@ -13,12 +13,15 @@ use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Enums\FileType;
+use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class FileService
 {
+    private const FOLDER_CACHE = 'cache';
+
     private const FOLDER_DOCUMENT = 'document';
 
     private const FOLDER_IMAGE = 'image';
@@ -60,7 +63,7 @@ class FileService
 
     public function save(string $file, string $folder): string
     {
-        $filePath = $this->filePath.slugify($folder).'/'.Str::random(32).'.'.$this->fileExtension->value;
+        $filePath = $this->filePath.slugify($folder).'/'.Str::random(config('laravel-files.random_filename_length')).'.'.$this->fileExtension->value;
 
         Storage::disk(config('laravel-files.disk'))->put($filePath, file_get_contents($file));
 
@@ -200,7 +203,7 @@ class FileService
 
     private static function getCacheImageFolder(?FileType $fileType = null, string|int|null $folder = null): string
     {
-        $parts = [config('laravel-files.image_cache_folder')];
+        $parts = [self::FOLDER_IMAGE, self::FOLDER_CACHE];
 
         if ($fileType) {
             $parts[] = $fileType->value;
