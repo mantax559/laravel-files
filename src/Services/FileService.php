@@ -14,6 +14,7 @@ use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Enums\FileType;
+use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -66,10 +67,14 @@ class FileService
 
     public function save(string $file, string $folder): string
     {
+        if (! is_file($file) && ! is_url($file)) {
+            throw new UserFriendlyException(__('Bad file format!'));
+        }
+
         $filePath = self::path(
             $this->filePath,
             slugify($folder),
-            Str::random(config('laravel-files.random_filename_length')).'.'.$this->fileExtension->value
+            Str::uuid7()->toString().'.'.$this->fileExtension->value
         );
 
         Storage::disk(config('laravel-files.disk'))->put($filePath, file_get_contents($file));
@@ -86,7 +91,6 @@ class FileService
         string $sourcePath,
         array $sizes,
         ?FileType $fileType = null,
-        ?string $filename = null,
         string|int|null $folder = null
     ): array {
         return collect($sizes)
@@ -95,7 +99,6 @@ class FileService
                 $size['width'],
                 $size['height'],
                 $fileType,
-                $filename,
                 $folder
             ))->all();
     }
@@ -105,7 +108,6 @@ class FileService
         int $width,
         int $height,
         ?FileType $fileType = null,
-        ?string $filename = null,
         string|int|null $folder = null
     ): string {
         if (! Storage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
@@ -115,7 +117,7 @@ class FileService
         $sourceInfo = pathinfo($sourcePath);
         $cachePath = self::path(
             self::getCacheImageFolder($fileType, $folder),
-            slugify($filename ?? $sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension']
+            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension']
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
