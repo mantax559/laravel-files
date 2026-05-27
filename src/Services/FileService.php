@@ -45,10 +45,7 @@ class FileService
     public function save(string $file, string $folder): string
     {
         if (! is_file($file) && ! is_url($file)) {
-            throw new UserFriendlyException(__(
-                'The file could not be read. Provide a local path or URL with one of these extensions: :extensions.',
-                ['extensions' => self::getAcceptedExtensionsText()]
-            ));
+            throw new UserFriendlyException(__('The file could not be read. Provide a valid local path or URL.'));
         }
 
         $fileContents = self::readFileContents($file);
@@ -262,10 +259,7 @@ class FileService
         $handle = fopen($file, 'rb');
 
         if (! $handle) {
-            throw new UserFriendlyException(__(
-                'The file could not be opened. Accepted formats: :extensions.',
-                ['extensions' => self::getAcceptedExtensionsText()]
-            ));
+            throw new UserFriendlyException(__('The file could not be opened. Please try uploading it again.'));
         }
 
         $contents = '';
@@ -276,10 +270,7 @@ class FileService
             if (! is_string($chunk)) {
                 fclose($handle);
 
-                throw new UserFriendlyException(__(
-                    'The file could not be read. Accepted formats: :extensions.',
-                    ['extensions' => self::getAcceptedExtensionsText()]
-                ));
+                throw new UserFriendlyException(__('The file could not be read. Please try uploading it again.'));
             }
 
             $contents .= $chunk;
@@ -314,10 +305,7 @@ class FileService
             return self::getEnumExtension($extension);
         }
 
-        throw new UserFriendlyException(__(
-            'The file extension could not be detected. Accepted formats: :extensions.',
-            ['extensions' => self::getAcceptedExtensionsText()]
-        ));
+        throw new UserFriendlyException(__('The file extension could not be detected.'));
     }
 
     private static function getFileExtensionFromMime(string $fileContents): FileExtension
@@ -338,10 +326,7 @@ class FileService
             }
         }
 
-        throw new UserFriendlyException(__(
-            'The file MIME type could not be detected. Accepted formats: :extensions.',
-            ['extensions' => self::getAcceptedExtensionsText()]
-        ));
+        throw new UserFriendlyException(__('The file MIME type could not be detected.'));
     }
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
@@ -416,10 +401,7 @@ class FileService
         $imageSize = getimagesizefromstring($fileContents);
 
         if (! is_array($imageSize)) {
-            throw new UserFriendlyException(__(
-                'The file is not a valid image. Accepted image formats: :extensions.',
-                ['extensions' => self::getAcceptedExtensionsText(FileExtension::Avif)]
-            ));
+            throw new UserFriendlyException(__('The uploaded file is not a valid image.'));
         }
 
         if (
@@ -427,7 +409,7 @@ class FileService
             || is_more($imageSize[1], config('laravel-files.max_upload_image_side_pixels'))
         ) {
             throw new UserFriendlyException(__(
-                'The image resolution is too large. Maximum allowed side is :max_side px, actual resolution is :width x :height px.',
+                'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.',
                 [
                     'max_side' => config('laravel-files.max_upload_image_side_pixels'),
                     'width' => $imageSize[0],
