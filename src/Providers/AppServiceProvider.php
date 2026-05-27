@@ -28,6 +28,6 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(self::PATH_CONFIG, 'laravel-files');
-        config(['image.driver' => Driver::class]);
+        $this->app['config']->set('image.driver', Driver::class);
     }
 }

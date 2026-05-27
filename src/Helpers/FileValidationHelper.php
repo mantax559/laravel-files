@@ -170,7 +170,7 @@ final class FileValidationHelper
         foreach ($mimes as $mime) {
             $mimeValues[] = $mime instanceof FileExtension
                 ? $mime->value
-                : format_string($mime, 3);
+                : $mime;
         }
 
         return $mimeValues;

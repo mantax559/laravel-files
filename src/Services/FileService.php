@@ -122,7 +122,7 @@ class FileService
 
             Storage::disk(config('laravel-files.image_cache_disk'))->put(
                 $cachePath,
-                $image->encodeUsingFileExtension($sourceExtension->value, quality: config('laravel-files.image_cache_quality'))
+                $image->encodeUsingFileExtension($sourceExtension->value, quality: config('laravel-files.image_cache_quality'))->toString()
             );
         }
 
@@ -133,7 +133,7 @@ class FileService
     {
         foreach ($this->tempFiles as $tempFile) {
             if ($tempFile['is_upload']) {
-                $this->delete($tempFile['file_path']);
+                Storage::disk(config('laravel-files.disk'))->delete($tempFile['file_path']);
             } else {
                 Storage::disk(config('laravel-files.disk'))->put($tempFile['file_path'], base64_decode($tempFile['file']));
             }
@@ -256,7 +256,7 @@ class FileService
 
     private static function readFileContents(string $file): string
     {
-        $handle = fopen($file, 'rb');
+        $handle = @fopen($file, 'rb');
 
         if (! $handle) {
             throw new UserFriendlyException(__('The file could not be opened. Please try uploading it again.'));
@@ -266,13 +266,6 @@ class FileService
 
         while (! feof($handle)) {
             $chunk = fread($handle, 1024 * 1024);
-
-            if (! is_string($chunk)) {
-                fclose($handle);
-
-                throw new UserFriendlyException(__('The file could not be read. Please try uploading it again.'));
-            }
-
             $contents .= $chunk;
 
             self::ensureFileSize(
@@ -299,7 +292,7 @@ class FileService
     private static function getPathExtension(string $path): FileExtension
     {
         $path = parse_url($path, PHP_URL_PATH) ?: $path;
-        $extension = format_string(pathinfo($path, PATHINFO_EXTENSION), 3);
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
 
         if (! empty($extension)) {
             return self::getEnumExtension($extension);
@@ -310,23 +303,19 @@ class FileService
 
     private static function getFileExtensionFromMime(string $fileContents): FileExtension
     {
-        $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
+        $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
 
-        if (is_string($mime)) {
-            try {
-                return FileExtension::getByMimeType($mime);
-            } catch (ValueError) {
-                throw new UserFriendlyException(__(
-                    'The detected MIME type :mime is not supported. Accepted formats: :extensions.',
-                    [
-                        'mime' => $mime,
-                        'extensions' => self::getAcceptedExtensionsText(),
-                    ]
-                ));
-            }
+        try {
+            return FileExtension::getByMimeType($mime);
+        } catch (ValueError) {
+            throw new UserFriendlyException(__(
+                'The detected MIME type :mime is not supported. Accepted formats: :extensions.',
+                [
+                    'mime' => $mime,
+                    'extensions' => self::getAcceptedExtensionsText(),
+                ]
+            ));
         }
-
-        throw new UserFriendlyException(__('The file MIME type could not be detected.'));
     }
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
@@ -367,13 +356,13 @@ class FileService
             return $extension;
         }
 
-        return self::getEnumExtension(format_string($extension, 3) ?? '');
+        return self::getEnumExtension($extension);
     }
 
     private static function getEnumExtension(string $extension): FileExtension
     {
         try {
-            return FileExtension::getEnumByString(format_string($extension, 3) ?? '');
+            return FileExtension::getEnumByString($extension);
         } catch (ValueError) {
             throw new UserFriendlyException(__(
                 'The :extension file extension is not supported. Accepted formats: :extensions.',
@@ -398,7 +387,7 @@ class FileService
 
     private static function ensureImageUploadDimensions(string $fileContents): void
     {
-        $imageSize = getimagesizefromstring($fileContents);
+        $imageSize = @getimagesizefromstring($fileContents);
 
         if (! is_array($imageSize)) {
             throw new UserFriendlyException(__('The uploaded file is not a valid image.'));
