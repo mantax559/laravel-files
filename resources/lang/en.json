@@ -1,8 +1,2 @@
 {
-  "Setting key :key does not exist.": "Setting key :key does not exist.",
-  "json": "JSON",
-  "string": "String",
-  "float": "Float",
-  "integer": "Integer",
-  "boolean": "Boolean"
 }

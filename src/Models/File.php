@@ -17,14 +17,13 @@ class File extends Model
 
     protected $fillable = [
         'path',
-        'size',
         'extension',
         'source',
+        'size',
     ];
 
     protected $casts = [
         'extension' => FileExtension::class,
-        'size' => 'integer',
         'source' => FileSource::class,
     ];
 

@@ -11,7 +11,7 @@ final class FileValidationHelper
 {
     private const BYTES_IN_KILOBYTE = 1024;
 
-    public static function getFileRules(
+    public static function getArchiveRules(
         string|bool|null $required = null,
         ?int $fileSize = null,
         ?int $minFileSize = null,
@@ -22,37 +22,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAllAcceptedExtensions()),
-        );
-    }
-
-    public static function getDocumentRules(
-        string|bool|null $required = null,
-        ?int $fileSize = null,
-        ?int $minFileSize = null,
-        ?int $maxFileSize = null,
-        ?array $mimes = null
-    ): array {
-        return ValidationHelper::mergeRules(
-            ValidationHelper::getRequiredRules($required),
-            'file',
-            self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_document_extensions')),
-        );
-    }
-
-    public static function getVideoRules(
-        string|bool|null $required = null,
-        ?int $fileSize = null,
-        ?int $minFileSize = null,
-        ?int $maxFileSize = null,
-        ?array $mimes = null
-    ): array {
-        return ValidationHelper::mergeRules(
-            ValidationHelper::getRequiredRules($required),
-            'file',
-            self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_video_extensions')),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_archive_extensions')),
         );
     }
 
@@ -71,7 +41,7 @@ final class FileValidationHelper
         );
     }
 
-    public static function getArchiveRules(
+    public static function getDocumentRules(
         string|bool|null $required = null,
         ?int $fileSize = null,
         ?int $minFileSize = null,
@@ -82,7 +52,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_archive_extensions')),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_document_extensions')),
         );
     }
 
@@ -108,6 +78,36 @@ final class FileValidationHelper
                 ...self::getImageDimensionRules('height', $height, $minHeight, $maxHeight),
             ]),
             self::getMimesRule($mimes ?? config('laravel-files.accept_image_extensions')),
+        );
+    }
+
+    public static function getVideoRules(
+        string|bool|null $required = null,
+        ?int $fileSize = null,
+        ?int $minFileSize = null,
+        ?int $maxFileSize = null,
+        ?array $mimes = null
+    ): array {
+        return ValidationHelper::mergeRules(
+            ValidationHelper::getRequiredRules($required),
+            'file',
+            self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_video_extensions')),
+        );
+    }
+
+    public static function getFileRules(
+        string|bool|null $required = null,
+        ?int $fileSize = null,
+        ?int $minFileSize = null,
+        ?int $maxFileSize = null,
+        ?array $mimes = null
+    ): array {
+        return ValidationHelper::mergeRules(
+            ValidationHelper::getRequiredRules($required),
+            'file',
+            self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
+            self::getMimesRule($mimes ?? self::getAllAcceptedExtensions()),
         );
     }
 
@@ -173,11 +173,11 @@ final class FileValidationHelper
     private static function getAllAcceptedExtensions(): array
     {
         return [
-            ...config('laravel-files.accept_image_extensions'),
-            ...config('laravel-files.accept_document_extensions'),
-            ...config('laravel-files.accept_video_extensions'),
-            ...config('laravel-files.accept_audio_extensions'),
             ...config('laravel-files.accept_archive_extensions'),
+            ...config('laravel-files.accept_audio_extensions'),
+            ...config('laravel-files.accept_document_extensions'),
+            ...config('laravel-files.accept_image_extensions'),
+            ...config('laravel-files.accept_video_extensions'),
             ...config('laravel-files.accept_file_extensions'),
         ];
     }

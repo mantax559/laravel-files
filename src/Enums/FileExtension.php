@@ -16,16 +16,16 @@ enum FileExtension: string
 
     public const FOLDER_DOCUMENT = 'document';
 
-    public const FOLDER_FILE = 'file';
-
     public const FOLDER_IMAGE = 'image';
 
     public const FOLDER_VIDEO = 'video';
 
+    public const FOLDER_FILE = 'file';
+
     case SevenZip = '7z';
     case Apng = 'apng';
-    case Avif = 'avif';
     case Avi = 'avi';
+    case Avif = 'avif';
     case Csv = 'csv';
     case Doc = 'doc';
     case Docx = 'docx';
@@ -45,8 +45,8 @@ enum FileExtension: string
     case Odt = 'odt';
     case Ogg = 'ogg';
     case Pdf = 'pdf';
-    case Pjp = 'pjp';
     case Pjpeg = 'pjpeg';
+    case Pjp = 'pjp';
     case Png = 'png';
     case Ppt = 'ppt';
     case Pptx = 'pptx';
@@ -63,20 +63,25 @@ enum FileExtension: string
     case Xml = 'xml';
     case Zip = 'zip';
 
-    public static function imageExtensions(): array
+    public static function archiveExtensions(): array
     {
         return [
-            self::Apng,
-            self::Avif,
-            self::Gif,
-            self::Jfif,
-            self::Jpeg,
-            self::Jpg,
-            self::Pjp,
-            self::Pjpeg,
-            self::Png,
-            self::Svg,
-            self::Webp,
+            self::SevenZip,
+            self::Gz,
+            self::Rar,
+            self::Tar,
+            self::Zip,
+        ];
+    }
+
+    public static function audioExtensions(): array
+    {
+        return [
+            self::Flac,
+            self::M4a,
+            self::Mp3,
+            self::Ogg,
+            self::Wav,
         ];
     }
 
@@ -98,6 +103,23 @@ enum FileExtension: string
         ];
     }
 
+    public static function imageExtensions(): array
+    {
+        return [
+            self::Apng,
+            self::Avif,
+            self::Gif,
+            self::Jfif,
+            self::Jpeg,
+            self::Jpg,
+            self::Pjp,
+            self::Pjpeg,
+            self::Png,
+            self::Svg,
+            self::Webp,
+        ];
+    }
+
     public static function videoExtensions(): array
     {
         return [
@@ -106,28 +128,6 @@ enum FileExtension: string
             self::Mov,
             self::Mp4,
             self::Webm,
-        ];
-    }
-
-    public static function audioExtensions(): array
-    {
-        return [
-            self::Flac,
-            self::M4a,
-            self::Mp3,
-            self::Ogg,
-            self::Wav,
-        ];
-    }
-
-    public static function archiveExtensions(): array
-    {
-        return [
-            self::SevenZip,
-            self::Gz,
-            self::Rar,
-            self::Tar,
-            self::Zip,
         ];
     }
 
@@ -150,12 +150,12 @@ enum FileExtension: string
             'application/rtf' => self::Rtf,
             'application/vnd.ms-excel' => self::Xls,
             'application/vnd.ms-powerpoint' => self::Ppt,
-            'application/vnd.rar' => self::Rar,
             'application/vnd.oasis.opendocument.spreadsheet' => self::Ods,
             'application/vnd.oasis.opendocument.text' => self::Odt,
             'application/vnd.openxmlformats-officedocument.presentationml.presentation' => self::Pptx,
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => self::Xlsx,
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => self::Docx,
+            'application/vnd.rar' => self::Rar,
             'application/x-7z-compressed' => self::SevenZip,
             'application/x-rar-compressed' => self::Rar,
             'application/x-tar' => self::Tar,
@@ -185,19 +185,19 @@ enum FileExtension: string
             'video/mp4' => self::Mp4,
             'video/quicktime' => self::Mov,
             'video/webm' => self::Webm,
-            'video/x-msvideo' => self::Avi,
             'video/x-matroska' => self::Mkv,
+            'video/x-msvideo' => self::Avi,
         ][$mimeType] ?? throw new \ValueError("$mimeType is not a supported file MIME type");
     }
 
     public function folder(): string
     {
         return match (true) {
-            self::containsExtension(self::imageExtensions(), $this) => self::FOLDER_IMAGE,
-            self::containsExtension(self::documentExtensions(), $this) => self::FOLDER_DOCUMENT,
-            self::containsExtension(self::videoExtensions(), $this) => self::FOLDER_VIDEO,
-            self::containsExtension(self::audioExtensions(), $this) => self::FOLDER_AUDIO,
             self::containsExtension(self::archiveExtensions(), $this) => self::FOLDER_ARCHIVE,
+            self::containsExtension(self::audioExtensions(), $this) => self::FOLDER_AUDIO,
+            self::containsExtension(self::documentExtensions(), $this) => self::FOLDER_DOCUMENT,
+            self::containsExtension(self::imageExtensions(), $this) => self::FOLDER_IMAGE,
+            self::containsExtension(self::videoExtensions(), $this) => self::FOLDER_VIDEO,
             default => self::FOLDER_FILE,
         };
     }

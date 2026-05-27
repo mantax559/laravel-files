@@ -13,9 +13,9 @@ return new class extends Migration
         Schema::create(config('laravel-files.table'), function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('path')->unique();
-            $table->unsignedBigInteger('size');
             $table->string('extension');
             $table->string('source');
+            $table->unsignedBigInteger('size');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
             $table->softDeletes();
