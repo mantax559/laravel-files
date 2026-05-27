@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileFolder;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Enums\FileType;
 use RuntimeException;
@@ -20,6 +19,12 @@ use Throwable;
 
 class FileService
 {
+    private const FOLDER_DOCUMENT = 'document';
+
+    private const FOLDER_IMAGE = 'image';
+
+    private const FOLDER_SEEDER = 'seeder';
+
     private array $tempFiles = [];
 
     private string $filePath = '';
@@ -30,7 +35,7 @@ class FileService
         private FileExtension $fileExtension = FileExtension::Png
     ) {
         if (cmprenum($this->fileSource, FileSource::Seeder)) {
-            $this->filePath .= self::folderPath(FileFolder::Seeder);
+            $this->filePath .= self::folderPath(self::FOLDER_SEEDER);
         }
 
         $this->filePath .= match ($this->fileExtension) {
@@ -38,8 +43,8 @@ class FileService
             FileExtension::Jpeg,
             FileExtension::Jpg,
             FileExtension::Png,
-            FileExtension::Webp => self::folderPath(FileFolder::Image),
-            FileExtension::Pdf => self::folderPath(FileFolder::Document),
+            FileExtension::Webp => self::folderPath(self::FOLDER_IMAGE),
+            FileExtension::Pdf => self::folderPath(self::FOLDER_DOCUMENT),
             default => throw new RuntimeException(__(
                 'Unsupported file extension: :extension',
                 ['extension' => $this->fileExtension->value]
@@ -93,20 +98,21 @@ class FileService
         ?string $filename = null,
         string|int|null $folder = null
     ): array {
-        $disk = Storage::disk(config('laravel-files.disk'));
+        $sourceDisk = Storage::disk(config('laravel-files.disk'));
+        $cacheDisk = Storage::disk(config('laravel-files.image_cache_disk'));
 
-        if (! $disk->exists($sourcePath)) {
-            throw new \RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
+        if (! $sourceDisk->exists($sourcePath)) {
+            throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
         }
 
         $sourceInfo = pathinfo($sourcePath);
         $cacheFolder = self::getCacheImageFolder($fileType, $folder);
         $cachePath = $cacheFolder.'/'.Str::slug($filename ?? $sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension'];
 
-        if (! $disk->exists($cachePath)) {
-            $image = Image::decodePath($disk->path($sourcePath))->cover($width, $height);
+        if (! $cacheDisk->exists($cachePath)) {
+            $image = Image::decodePath($sourceDisk->path($sourcePath))->cover($width, $height);
 
-            $disk->put(
+            $cacheDisk->put(
                 $cachePath,
                 $image->encodeUsingFileExtension($sourceInfo['extension'], quality: config('laravel-files.image_cache_quality'))
             );
@@ -180,7 +186,7 @@ class FileService
         }
 
         if ($model) {
-            Storage::disk(config('laravel-files.disk'))->deleteDirectory(self::getCacheImageFolder($this->fileType, $model->getKey()));
+            Storage::disk(config('laravel-files.image_cache_disk'))->deleteDirectory(self::getCacheImageFolder($this->fileType, $model->getKey()));
         }
 
         $this->tempFiles[] = [
@@ -207,8 +213,8 @@ class FileService
         return implode('/', $parts);
     }
 
-    private static function folderPath(FileFolder $folder): string
+    private static function folderPath(string $folder): string
     {
-        return $folder->value.'/';
+        return $folder.'/';
     }
 }
