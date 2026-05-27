@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Файлът не можа да бъде прочетен. Посочете валиден локален път или URL.",
+  "File does not exist: :path": "Файлът не съществува: :path",
+  "The file could not be opened. Please try uploading it again.": "Файлът не можа да бъде отворен. Опитайте да го качите отново.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Каченият файл е твърде голям. Максимално позволеният размер е :max_size, действителният размер е :actual_size.",
+  "The file extension could not be detected.": "Разширението на файла не можа да бъде открито.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Откритият MIME тип :mime не се поддържа. Приети формати: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Форматът на файла :extension не е позволен. Приети :folder формати: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Разширението на файла :extension не се поддържа. Приети формати: :extensions.",
+  "The uploaded file is not a valid image.": "Каченият файл не е валидно изображение.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Разделителната способност на изображението е твърде голяма. Максимално позволената страна е :max_sidepx, действителната разделителна способност е :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Записаният файл е твърде голям. Максимално позволеният размер е :max_size, действителният размер е :actual_size."
+}

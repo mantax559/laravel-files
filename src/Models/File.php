@@ -6,26 +6,26 @@ namespace Mantax559\LaravelFiles\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Mantax559\LaravelFiles\Enums\FileExtension;
+use Mantax559\LaravelFiles\Enums\FileSource;
 
 class File extends Model
 {
     use HasUuids;
+    use SoftDeletes;
 
     protected $fillable = [
         'path',
-        'user_id',
-        'size_bits',
         'extension',
-        'disk',
-        'original_name',
-        'mime_type',
-        'checksum',
+        'source',
+        'size',
     ];
 
     protected $casts = [
         'extension' => FileExtension::class,
-        'size_bits' => 'integer',
+        'size' => 'integer',
+        'source' => FileSource::class,
     ];
 
     public $timestamps = true;

@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "A fájl nem olvasható. Adjon meg érvényes helyi útvonalat vagy URL-t.",
+  "File does not exist: :path": "A fájl nem létezik: :path",
+  "The file could not be opened. Please try uploading it again.": "A fájlt nem lehetett megnyitni. Próbálja meg újra feltölteni.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "A feltöltött fájl túl nagy. A maximálisan engedélyezett méret :max_size, a tényleges méret :actual_size.",
+  "The file extension could not be detected.": "A fájlkiterjesztés nem észlelhető.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Az észlelt MIME-típus :mime nem támogatott. Elfogadott formátumok: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "A :extension fájlformátum nem engedélyezett. Elfogadott :folder formátumok: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "A :extension fájlkiterjesztés nem támogatott. Elfogadott formátumok: :extensions.",
+  "The uploaded file is not a valid image.": "A feltöltött fájl nem érvényes kép.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "A kép felbontása túl nagy. A maximálisan engedélyezett oldal :max_sidepx, a tényleges felbontás :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "A mentett fájl túl nagy. A maximálisan engedélyezett méret :max_size, a tényleges méret :actual_size."
+}

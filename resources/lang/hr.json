@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Datoteku nije moguće pročitati. Navedite ispravnu lokalnu putanju ili URL.",
+  "File does not exist: :path": "Datoteka ne postoji: :path",
+  "The file could not be opened. Please try uploading it again.": "Datoteku nije moguće otvoriti. Pokušajte je ponovno učitati.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Učitana datoteka je prevelika. Najveća dopuštena veličina je :max_size, stvarna veličina je :actual_size.",
+  "The file extension could not be detected.": "Ekstenziju datoteke nije moguće otkriti.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Otkriveni MIME tip :mime nije podržan. Prihvaćeni formati: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Format datoteke :extension nije dopušten. Prihvaćeni :folder formati: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Ekstenzija datoteke :extension nije podržana. Prihvaćeni formati: :extensions.",
+  "The uploaded file is not a valid image.": "Učitana datoteka nije valjana slika.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Razlučivost slike je prevelika. Najveća dopuštena stranica je :max_sidepx, stvarna razlučivost je :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Spremljena datoteka je prevelika. Najveća dopuštena veličina je :max_size, stvarna veličina je :actual_size."
+}

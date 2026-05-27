@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "ფაილის წაკითხვა ვერ მოხერხდა. მიუთითეთ სწორი ლოკალური გზა ან URL.",
+  "File does not exist: :path": "ფაილი არ არსებობს: :path",
+  "The file could not be opened. Please try uploading it again.": "ფაილის გახსნა ვერ მოხერხდა. სცადეთ მისი ხელახლა ატვირთვა.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "ატვირთული ფაილი ძალიან დიდია. მაქსიმალური დასაშვები ზომაა :max_size, ფაქტობრივი ზომაა :actual_size.",
+  "The file extension could not be detected.": "ფაილის გაფართოების აღმოჩენა ვერ მოხერხდა.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "აღმოჩენილი MIME ტიპი :mime მხარდაჭერილი არ არის. მისაღები ფორმატები: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "ფაილის ფორმატი :extension დაშვებული არ არის. მისაღები :folder ფორმატები: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "ფაილის გაფართოება :extension მხარდაჭერილი არ არის. მისაღები ფორმატები: :extensions.",
+  "The uploaded file is not a valid image.": "ატვირთული ფაილი არ არის ვალიდური სურათი.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "სურათის გარჩევადობა ძალიან დიდია. მაქსიმალური დასაშვები გვერდია :max_sidepx, ფაქტობრივი გარჩევადობაა :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "შენახული ფაილი ძალიან დიდია. მაქსიმალური დასაშვები ზომაა :max_size, ფაქტობრივი ზომაა :actual_size."
+}

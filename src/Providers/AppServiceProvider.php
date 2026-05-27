@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Intervention\Image\Drivers\Vips\Driver;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +28,6 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(self::PATH_CONFIG, 'laravel-files');
+        $this->app['config']->set('image.driver', Driver::class);
     }
 }

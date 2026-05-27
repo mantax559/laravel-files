@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "Не удалось прочитать файл. Укажите корректный локальный путь или URL.",
+  "File does not exist: :path": "Файл не существует: :path",
+  "The file could not be opened. Please try uploading it again.": "Не удалось открыть файл. Попробуйте загрузить его снова.",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Загруженный файл слишком большой. Максимальный размер: :max_size, фактический размер: :actual_size.",
+  "The file extension could not be detected.": "Не удалось определить расширение файла.",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Обнаруженный MIME-тип :mime не поддерживается. Допустимые форматы: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Формат файла :extension не разрешен. Допустимые форматы :folder: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Расширение файла :extension не поддерживается. Допустимые форматы: :extensions.",
+  "The uploaded file is not a valid image.": "Загруженный файл не является допустимым изображением.",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Разрешение изображения слишком большое. Максимальная сторона: :max_sidepx, фактическое разрешение: :widthx:heightpx.",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Сохраненный файл слишком большой. Максимальный размер: :max_size, фактический размер: :actual_size."
+}

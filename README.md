@@ -7,7 +7,8 @@
 
 ## Requirements
 
-- **Xdebug** - optional, required for code coverage analysis
+- **FFI** - required for libvips image processing
+- **Xdebug** - required for code coverage analysis (recommended for development)
 
 ## Installation & Setup
 

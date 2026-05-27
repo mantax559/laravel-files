@@ -1,0 +1,13 @@
+{
+  "The file could not be read. Provide a valid local path or URL.": "無法讀取檔案。請提供有效的本機路徑或 URL。",
+  "File does not exist: :path": "檔案不存在：:path",
+  "The file could not be opened. Please try uploading it again.": "無法開啟檔案。請嘗試重新上傳。",
+  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "上傳的檔案過大。允許的最大大小為 :max_size，實際大小為 :actual_size。",
+  "The file extension could not be detected.": "無法偵測檔案副檔名。",
+  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "偵測到的 MIME 類型 :mime 不受支援。接受的格式：:extensions。",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "檔案格式 :extension 不被允許。接受的 :folder 格式：:extensions。",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "檔案副檔名 :extension 不受支援。接受的格式：:extensions。",
+  "The uploaded file is not a valid image.": "上傳的檔案不是有效圖片。",
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "圖片解析度過大。允許的最大邊長為 :max_sidepx，實際解析度為 :widthx:heightpx。",
+  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "儲存的檔案過大。允許的最大大小為 :max_size，實際大小為 :actual_size。"
+}
