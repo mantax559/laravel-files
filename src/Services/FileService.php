@@ -11,14 +11,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
+use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
+use ValueError;
 
 class FileService
 {
+    private const FOLDER_ARCHIVE = 'archive';
+
+    private const FOLDER_AUDIO = 'audio';
+
     private const FOLDER_CACHE = 'cache';
 
     private const FOLDER_DOCUMENT = 'document';
@@ -29,21 +35,10 @@ class FileService
 
     private const FOLDER_SEEDER = 'seeder';
 
-    private const EXTENSION_PDF = 'pdf';
+    private const FOLDER_VIDEO = 'video';
 
-    private const EXTENSION_WEBP = 'webp';
-
-    private const array MIME_EXTENSIONS = [
-        'application/pdf' => 'pdf',
-        'image/avif' => 'avif',
-        'image/gif' => 'gif',
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/svg+xml' => 'svg',
-        'image/webp' => 'webp',
-    ];
-
-    private const array WEBP_CONVERTIBLE_EXTENSIONS = [
+    private const array AVIF_CONVERTIBLE_EXTENSIONS = [
+        'avif',
         'jpeg',
         'jpg',
         'png',
@@ -66,11 +61,12 @@ class FileService
 
         $fileContents = self::readFileContents($file);
         $fileExtension = self::getFileExtension($file, $fileContents);
+        self::ensureAcceptedFileExtension($fileExtension);
 
-        if (self::isConvertibleToWebp($fileExtension)) {
+        if (self::isConvertibleToAvif($fileExtension)) {
             self::ensureImageUploadDimensions($fileContents);
             $fileContents = self::prepareImageForStorage($fileContents);
-            $fileExtension = self::EXTENSION_WEBP;
+            $fileExtension = FileExtension::Avif;
         }
 
         self::ensureFileSize(
@@ -83,7 +79,7 @@ class FileService
 
         $filePath = self::path(
             $this->getStorageFolderPath($fileExtension, $folder),
-            Str::uuid7()->toString().'.'.$fileExtension
+            Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
         Storage::disk(config('laravel-files.disk'))->put($filePath, $fileContents);
@@ -124,7 +120,7 @@ class FileService
         $sourceExtension = self::getPathExtension($sourcePath);
         $cachePath = self::path(
             self::getCacheImageFolder($folder),
-            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceExtension
+            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceExtension->value
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
@@ -132,7 +128,7 @@ class FileService
 
             Storage::disk(config('laravel-files.image_cache_disk'))->put(
                 $cachePath,
-                $image->encodeUsingFileExtension($sourceExtension, quality: config('laravel-files.image_cache_quality'))
+                $image->encodeUsingFileExtension($sourceExtension->value, quality: config('laravel-files.image_cache_quality'))
             );
         }
 
@@ -210,7 +206,7 @@ class FileService
         return Storage::disk(config('laravel-files.disk'))->delete($filePath);
     }
 
-    private function deleteSeederFolder(string $fileExtension, string $folder): void
+    private function deleteSeederFolder(FileExtension $fileExtension, string $folder): void
     {
         if (! cmprenum($this->fileSource, FileSource::Seeder)) {
             return;
@@ -229,7 +225,7 @@ class FileService
         $this->deletedSeederFolders[] = $folderPath;
     }
 
-    private function getStorageFolderPath(string $fileExtension, string $folder): string
+    private function getStorageFolderPath(FileExtension $fileExtension, string $folder): string
     {
         $parts = [];
 
@@ -254,29 +250,60 @@ class FileService
         return self::path(...$parts);
     }
 
-    private static function getStorageFolder(string $fileExtension): string
+    private static function getStorageFolder(FileExtension $fileExtension): string
     {
         if (self::isImageExtension($fileExtension)) {
             return self::FOLDER_IMAGE;
         }
 
-        if (cmprstr($fileExtension, self::EXTENSION_PDF)) {
+        if (self::isDocumentExtension($fileExtension)) {
             return self::FOLDER_DOCUMENT;
+        }
+
+        if (self::isVideoExtension($fileExtension)) {
+            return self::FOLDER_VIDEO;
+        }
+
+        if (self::isAudioExtension($fileExtension)) {
+            return self::FOLDER_AUDIO;
+        }
+
+        if (self::isArchiveExtension($fileExtension)) {
+            return self::FOLDER_ARCHIVE;
         }
 
         return self::FOLDER_FILE;
     }
 
-    private static function isImageExtension(string $fileExtension): bool
+    private static function isImageExtension(FileExtension $fileExtension): bool
     {
-        return collect(config('laravel-files.accept_image_mimes'))
-            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension));
+        return self::containsExtension(FileExtension::imageExtensions(), $fileExtension);
     }
 
-    private static function isConvertibleToWebp(string $fileExtension): bool
+    private static function isDocumentExtension(FileExtension $fileExtension): bool
     {
-        return collect(self::WEBP_CONVERTIBLE_EXTENSIONS)
-            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension));
+        return self::containsExtension(FileExtension::documentExtensions(), $fileExtension);
+    }
+
+    private static function isVideoExtension(FileExtension $fileExtension): bool
+    {
+        return self::containsExtension(FileExtension::videoExtensions(), $fileExtension);
+    }
+
+    private static function isAudioExtension(FileExtension $fileExtension): bool
+    {
+        return self::containsExtension(FileExtension::audioExtensions(), $fileExtension);
+    }
+
+    private static function isArchiveExtension(FileExtension $fileExtension): bool
+    {
+        return self::containsExtension(FileExtension::archiveExtensions(), $fileExtension);
+    }
+
+    private static function isConvertibleToAvif(FileExtension $fileExtension): bool
+    {
+        return collect(self::AVIF_CONVERTIBLE_EXTENSIONS)
+            ->contains(fn (string $extension): bool => cmprstr($extension, $fileExtension->value));
     }
 
     private static function readFileContents(string $file): string
@@ -312,7 +339,7 @@ class FileService
         return $contents;
     }
 
-    private static function getFileExtension(string $file, string $fileContents): string
+    private static function getFileExtension(string $file, string $fileContents): FileExtension
     {
         try {
             return self::getPathExtension($file);
@@ -321,27 +348,83 @@ class FileService
         }
     }
 
-    private static function getPathExtension(string $path): string
+    private static function getPathExtension(string $path): FileExtension
     {
         $path = parse_url($path, PHP_URL_PATH) ?: $path;
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         if (! empty($extension)) {
-            return $extension;
+            return self::getEnumExtension($extension);
         }
 
         throw new UserFriendlyException(__('Bad file format!'));
     }
 
-    private static function getFileExtensionFromMime(string $fileContents): string
+    private static function getFileExtensionFromMime(string $fileContents): FileExtension
     {
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
 
-        if (is_string($mime) && isset(self::MIME_EXTENSIONS[$mime])) {
-            return self::MIME_EXTENSIONS[$mime];
+        if (is_string($mime)) {
+            try {
+                return FileExtension::getByMimeType($mime);
+            } catch (ValueError) {
+                throw new UserFriendlyException(__('Bad file format!'));
+            }
         }
 
         throw new UserFriendlyException(__('Bad file format!'));
+    }
+
+    private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
+    {
+        if (self::containsExtension(self::getAcceptedExtensions($fileExtension), $fileExtension)) {
+            return;
+        }
+
+        throw new UserFriendlyException(__('Bad file format!'));
+    }
+
+    private static function getAcceptedExtensions(FileExtension $fileExtension): array
+    {
+        return match (self::getStorageFolder($fileExtension)) {
+            self::FOLDER_ARCHIVE => self::normalizeExtensions(config('laravel-files.accept_archive_extensions')),
+            self::FOLDER_AUDIO => self::normalizeExtensions(config('laravel-files.accept_audio_extensions')),
+            self::FOLDER_DOCUMENT => self::normalizeExtensions(config('laravel-files.accept_document_extensions')),
+            self::FOLDER_IMAGE => self::normalizeExtensions(config('laravel-files.accept_image_extensions')),
+            self::FOLDER_VIDEO => self::normalizeExtensions(config('laravel-files.accept_video_extensions')),
+            default => self::normalizeExtensions(config('laravel-files.accept_file_extensions')),
+        };
+    }
+
+    private static function normalizeExtensions(array $extensions): array
+    {
+        return collect($extensions)
+            ->map(fn (FileExtension|string $extension): FileExtension => self::normalizeExtension($extension))
+            ->all();
+    }
+
+    private static function normalizeExtension(FileExtension|string $extension): FileExtension
+    {
+        if ($extension instanceof FileExtension) {
+            return $extension;
+        }
+
+        return self::getEnumExtension($extension);
+    }
+
+    private static function getEnumExtension(string $extension): FileExtension
+    {
+        try {
+            return FileExtension::getEnumByString(strtolower($extension));
+        } catch (ValueError) {
+            throw new UserFriendlyException(__('Bad file format!'));
+        }
+    }
+
+    private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
+    {
+        return collect($extensions)
+            ->contains(fn (FileExtension $extension): bool => cmprenum($extension, $fileExtension));
     }
 
     private static function ensureImageUploadDimensions(string $fileContents): void
@@ -374,7 +457,7 @@ class FileService
         }
 
         return $image->encodeUsingFileExtension(
-            self::EXTENSION_WEBP,
+            FileExtension::Avif->value,
             quality: config('laravel-files.image_cache_quality')
         )->toString();
     }
