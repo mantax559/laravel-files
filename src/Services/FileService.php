@@ -60,7 +60,7 @@ class FileService
 
     public function save(string $file, string $folder): string
     {
-        $filePath = $this->filePath.Str::slug($folder).'/'.Str::random(32).'.'.$this->fileExtension->value;
+        $filePath = $this->filePath.slugify($folder).'/'.Str::random(32).'.'.$this->fileExtension->value;
 
         Storage::disk(config('laravel-files.disk'))->put($filePath, file_get_contents($file));
 
@@ -107,7 +107,7 @@ class FileService
 
         $sourceInfo = pathinfo($sourcePath);
         $cacheFolder = self::getCacheImageFolder($fileType, $folder);
-        $cachePath = $cacheFolder.'/'.Str::slug($filename ?? $sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension'];
+        $cachePath = $cacheFolder.'/'.slugify($filename ?? $sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceInfo['extension'];
 
         if (! $cacheDisk->exists($cachePath)) {
             $image = Image::decodePath($sourceDisk->path($sourcePath))->cover($width, $height);
@@ -207,7 +207,7 @@ class FileService
         }
 
         if (filled($folder)) {
-            $parts[] = Str::slug($folder);
+            $parts[] = slugify($folder);
         }
 
         return implode('/', $parts);
