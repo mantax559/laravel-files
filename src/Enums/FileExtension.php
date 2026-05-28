@@ -11,17 +11,17 @@ enum FileExtension: string
 {
     use EnumTrait;
 
-    public const FOLDER_ARCHIVE = 'archive';
+    public const string FOLDER_ARCHIVE = 'archive';
 
-    public const FOLDER_AUDIO = 'audio';
+    public const string FOLDER_AUDIO = 'audio';
 
-    public const FOLDER_DOCUMENT = 'document';
+    public const string FOLDER_DOCUMENT = 'document';
 
-    public const FOLDER_IMAGE = 'image';
+    public const string FOLDER_IMAGE = 'image';
 
-    public const FOLDER_VIDEO = 'video';
+    public const string FOLDER_VIDEO = 'video';
 
-    public const FOLDER_FILE = 'file';
+    public const string FOLDER_FILE = 'file';
 
     case SevenZip = '7z';
     case Apng = 'apng';

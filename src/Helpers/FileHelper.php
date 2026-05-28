@@ -7,10 +7,11 @@ namespace Mantax559\LaravelFiles\Helpers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
 use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelObservability\Models\Log;
 
 final class FileHelper
 {
-    private const LOCALHOST_HOSTS = [
+    private const array LOCALHOST_HOSTS = [
         'localhost',
         '127.0.0.1',
         '::1',
@@ -22,10 +23,12 @@ final class FileHelper
         string|int|array|Model|null $folderSource = null
     ): string
     {
+        [$width, $height] = self::imageCacheSize($sourcePath, $size);
+
         return FileService::cacheImage(
             $sourcePath,
-            config('laravel-files.image_cache_sizes')[$size]['width'],
-            config('laravel-files.image_cache_sizes')[$size]['height'],
+            $width,
+            $height,
             self::normalizeFolders($folderSource)
         );
     }
@@ -53,6 +56,42 @@ final class FileHelper
         }
 
         return $folderSource;
+    }
+
+    private static function imageCacheSize(string $sourcePath, string $size): array
+    {
+        if (! array_key_exists($size, config('laravel-files.image_cache_sizes'))) {
+            self::logInvalidImageCacheSize($sourcePath, $size);
+
+            return [null, null];
+        }
+
+        if (
+            ! empty(config('laravel-files.image_cache_sizes')[$size]['width'])
+            || ! empty(config('laravel-files.image_cache_sizes')[$size]['height'])
+        ) {
+            return [
+                empty(config('laravel-files.image_cache_sizes')[$size]['width'])
+                    ? null
+                    : config('laravel-files.image_cache_sizes')[$size]['width'],
+                empty(config('laravel-files.image_cache_sizes')[$size]['height'])
+                    ? null
+                    : config('laravel-files.image_cache_sizes')[$size]['height'],
+            ];
+        }
+
+        self::logInvalidImageCacheSize($sourcePath, $size);
+
+        return [null, null];
+    }
+
+    private static function logInvalidImageCacheSize(string $sourcePath, string $size): void
+    {
+        Log::error('Invalid image cache size configuration.', [
+            'source_path' => $sourcePath,
+            'size' => $size,
+            'image_cache_sizes' => config('laravel-files.image_cache_sizes'),
+        ]);
     }
 
     private static function isLocalhostUrl(): bool

@@ -9,7 +9,7 @@ use Mantax559\LaravelHelpers\Helpers\ValidationHelper;
 
 final class FileValidationHelper
 {
-    private const BYTES_IN_KILOBYTE = 1024;
+    private const int BYTES_IN_KILOBYTE = 1024;
 
     public static function getArchiveRules(
         string|bool|null $required = null,
