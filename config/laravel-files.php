@@ -68,7 +68,8 @@ return [
     */
 
     'image_cache_sizes' => [
-        // 'logo' => ['width' => 60, 'height' => 50],
+        // 'logo' => ['height' => 50],
+        // 'banner' => ['width' => 1200, 'height' => 800],
     ],
 
     /*

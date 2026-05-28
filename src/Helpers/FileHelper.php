@@ -10,13 +10,17 @@ use Mantax559\LaravelFiles\Services\FileService;
 
 final class FileHelper
 {
-    private const array LOCALHOST_HOSTS = [
+    private const LOCALHOST_HOSTS = [
         'localhost',
         '127.0.0.1',
         '::1',
     ];
 
-    public static function cacheImage(string $sourcePath, string $size, string|int|array|Model|null $folderSource = null): string
+    public static function cacheImage(
+        string $sourcePath,
+        string $size,
+        string|int|array|Model|null $folderSource = null
+    ): string
     {
         return FileService::cacheImage(
             $sourcePath,
@@ -26,7 +30,12 @@ final class FileHelper
         );
     }
 
-    public static function emailImage(string $sourcePath, string $size, Message $message, string|int|array|Model|null $folderSource = null): string
+    public static function emailImage(
+        string $sourcePath,
+        string $size,
+        Message $message,
+        string|int|array|Model|null $folderSource = null
+    ): string
     {
         $url = self::cacheImage($sourcePath, $size, $folderSource);
 

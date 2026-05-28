@@ -24,7 +24,6 @@ class File extends Model
 
     protected $casts = [
         'extension' => FileExtension::class,
-        'size' => 'integer',
         'source' => FileSource::class,
     ];
 
