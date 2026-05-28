@@ -59,6 +59,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Image Cache Sizes
+    |--------------------------------------------------------------------------
+    |
+    | Named image cache sizes allow applications to keep dimensions in config
+    | and call helpers by size name instead of passing width and height inline.
+    |
+    */
+
+    'image_cache_sizes' => [
+        // 'logo' => ['width' => 60, 'height' => 50],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Stored File Size Limit
     |--------------------------------------------------------------------------
     |
