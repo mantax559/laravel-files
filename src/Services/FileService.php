@@ -22,9 +22,9 @@ use ValueError;
 
 class FileService
 {
-    private const FOLDER_CACHE = 'cache';
+    private const string FOLDER_CACHE = 'cache';
 
-    private const FOLDER_SEEDER = 'seeder';
+    private const string FOLDER_SEEDER = 'seeder';
 
     private const array AVIF_CONVERTIBLE_EXTENSIONS = [
         FileExtension::Avif,
@@ -83,9 +83,9 @@ class FileService
 
     public static function cacheImage(
         string $sourcePath,
-        int $width,
-        int $height,
-        string|int|array|null $folders = null
+        ?int $width = null,
+        ?int $height = null,
+        string|int|array|null $folderSource = null
     ): string {
         if (! Storage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
             throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
@@ -93,13 +93,35 @@ class FileService
 
         $sourceInfo = pathinfo($sourcePath);
         self::getPathExtension($sourcePath);
+        $coverImage = ! empty($width) && ! empty($height);
+        $image = null;
+
+        if (empty($width) || empty($height)) {
+            $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
+
+            if (empty($width) && empty($height)) {
+                $width = $image->width();
+                $height = $image->height();
+            } elseif (empty($width)) {
+                $image = $image->scale(height: $height);
+                $width = $image->width();
+            } else {
+                $image = $image->scale(width: $width);
+                $height = $image->height();
+            }
+        }
+
         $cachePath = self::path(
-            self::getCacheImageFolder($folders),
+            self::getCacheImageFolder($folderSource),
             slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.FileExtension::Avif->value
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
-            $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath))->cover($width, $height);
+            $image ??= Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
+
+            if ($coverImage) {
+                $image = $image->cover($width, $height);
+            }
 
             Storage::disk(config('laravel-files.image_cache_disk'))->put(
                 $cachePath,
@@ -213,11 +235,11 @@ class FileService
         return self::path(...$parts);
     }
 
-    private static function getCacheImageFolder(string|int|array|null $folders = null): string
+    private static function getCacheImageFolder(string|int|array|null $folderSource = null): string
     {
         $parts = [self::FOLDER_CACHE, FileExtension::FOLDER_IMAGE];
 
-        foreach (is_array($folders) ? $folders : [$folders] as $folder) {
+        foreach (is_array($folderSource) ? $folderSource : [$folderSource] as $folder) {
             if (filled($folder)) {
                 $parts[] = slugify($folder);
             }
