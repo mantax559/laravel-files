@@ -169,25 +169,6 @@ final class FileServiceTest extends TestCase
     }
 
     #[Test]
-    public function cache_images_maps_all_sizes(): void
-    {
-        Storage::disk('local')->put('image/products/source.jpg', 'image');
-        $this->mockImageFacade()
-            ->shouldReceive('decodePath')
-            ->twice()
-            ->andReturn(new FakeImage(encodedContents: 'cached'));
-
-        $urls = (new FileService)->cacheImages('image/products/source.jpg', [
-            ['width' => 10, 'height' => 20],
-            ['width' => 30, 'height' => 40],
-        ], 'Products');
-
-        $this->assertCount(2, $urls);
-        Storage::disk('public')->assertExists('cache/image/products/source-10x20.jpg');
-        Storage::disk('public')->assertExists('cache/image/products/source-30x40.jpg');
-    }
-
-    #[Test]
     public function cache_image_fails_when_source_does_not_exist(): void
     {
         $this->expectException(RuntimeException::class);

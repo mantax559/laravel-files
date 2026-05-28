@@ -81,26 +81,7 @@ class FileService
         return $filePath;
     }
 
-    public function cacheImages(
-        string $sourcePath,
-        array $sizes,
-        string|int|null $folder = null
-    ): array {
-        $cachedImages = [];
-
-        foreach ($sizes as $size) {
-            $cachedImages[] = $this->cacheImage(
-                $sourcePath,
-                $size['width'],
-                $size['height'],
-                $folder
-            );
-        }
-
-        return $cachedImages;
-    }
-
-    public function cacheImage(
+    public static function cacheImage(
         string $sourcePath,
         int $width,
         int $height,
