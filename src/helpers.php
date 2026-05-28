@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
 use Mantax559\LaravelFiles\Helpers\FileHelper;
 
-if (! function_exists('cached_image')) {
-    function cached_image(
+if (! function_exists('cache_image')) {
+    function cache_image(
         string $sourcePath,
         string $size,
-        string|int|array|Model|null $folders = null
+        string|int|array|Model|null $folderSource = null
     ): string {
-        return FileHelper::cacheImage($sourcePath, $size, $folders);
+        return FileHelper::cacheImage($sourcePath, $size, $folderSource);
     }
 }
 
@@ -21,8 +21,8 @@ if (! function_exists('email_image')) {
         string $sourcePath,
         string $size,
         Message $message,
-        string|int|array|Model|null $folders = null
+        string|int|array|Model|null $folderSource = null
     ): string {
-        return FileHelper::emailImage($sourcePath, $size, $message, $folders);
+        return FileHelper::emailImage($sourcePath, $size, $message, $folderSource);
     }
 }
