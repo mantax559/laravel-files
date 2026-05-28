@@ -164,7 +164,7 @@ final class FileServiceTest extends TestCase
         $firstUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
         $secondUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
 
-        Storage::disk('public')->assertExists('cache/image/products/source-10x20.jpg');
+        Storage::disk('public')->assertExists('cache/image/products/source-10x20.avif');
         $this->assertSame($firstUrl, $secondUrl);
     }
 

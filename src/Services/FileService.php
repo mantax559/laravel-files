@@ -92,10 +92,10 @@ class FileService
         }
 
         $sourceInfo = pathinfo($sourcePath);
-        $sourceExtension = self::getPathExtension($sourcePath);
+        self::getPathExtension($sourcePath);
         $cachePath = self::path(
             self::getCacheImageFolder($folders),
-            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceExtension->value
+            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.FileExtension::Avif->value
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
@@ -103,7 +103,7 @@ class FileService
 
             Storage::disk(config('laravel-files.image_cache_disk'))->put(
                 $cachePath,
-                $image->encodeUsingFileExtension($sourceExtension->value, quality: config('laravel-files.image_cache_quality'))->toString()
+                $image->encodeUsingFileExtension(FileExtension::Avif->value, quality: config('laravel-files.image_cache_quality'))->toString()
             );
         }
 
