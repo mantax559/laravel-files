@@ -85,7 +85,7 @@ class FileService
         string $sourcePath,
         int $width,
         int $height,
-        string|int|null $folder = null
+        string|int|array|null $folders = null
     ): string {
         if (! Storage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
             throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
@@ -94,7 +94,7 @@ class FileService
         $sourceInfo = pathinfo($sourcePath);
         $sourceExtension = self::getPathExtension($sourcePath);
         $cachePath = self::path(
-            self::getCacheImageFolder($folder),
+            self::getCacheImageFolder($folders),
             slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.$sourceExtension->value
         );
 
@@ -213,12 +213,14 @@ class FileService
         return self::path(...$parts);
     }
 
-    private static function getCacheImageFolder(string|int|null $folder = null): string
+    private static function getCacheImageFolder(string|int|array|null $folders = null): string
     {
         $parts = [self::FOLDER_CACHE, FileExtension::FOLDER_IMAGE];
 
-        if (filled($folder)) {
-            $parts[] = slugify($folder);
+        foreach (is_array($folders) ? $folders : [$folders] as $folder) {
+            if (filled($folder)) {
+                $parts[] = slugify($folder);
+            }
         }
 
         return self::path(...$parts);
