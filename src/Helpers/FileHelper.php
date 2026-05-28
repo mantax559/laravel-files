@@ -49,40 +49,21 @@ final class FileHelper
         return $url;
     }
 
-    private static function normalizeFolders(string|int|array|Model|null $folderSource): string|int|array|null
-    {
-        if ($folderSource instanceof Model) {
-            return [$folderSource->getTable(), $folderSource->getKey()];
-        }
-
-        return $folderSource;
-    }
-
     private static function imageCacheSize(string $sourcePath, string $size): array
     {
-        if (! array_key_exists($size, config('laravel-files.image_cache_sizes'))) {
+        if (
+            empty(config('laravel-files.image_cache_sizes')[$size]['width'])
+            && empty(config('laravel-files.image_cache_sizes')[$size]['height'])
+        ) {
             self::logInvalidImageCacheSize($sourcePath, $size);
 
             return [null, null];
         }
 
-        if (
-            ! empty(config('laravel-files.image_cache_sizes')[$size]['width'])
-            || ! empty(config('laravel-files.image_cache_sizes')[$size]['height'])
-        ) {
-            return [
-                empty(config('laravel-files.image_cache_sizes')[$size]['width'])
-                    ? null
-                    : config('laravel-files.image_cache_sizes')[$size]['width'],
-                empty(config('laravel-files.image_cache_sizes')[$size]['height'])
-                    ? null
-                    : config('laravel-files.image_cache_sizes')[$size]['height'],
-            ];
-        }
-
-        self::logInvalidImageCacheSize($sourcePath, $size);
-
-        return [null, null];
+        return [
+            config('laravel-files.image_cache_sizes')[$size]['width'] ?? null,
+            config('laravel-files.image_cache_sizes')[$size]['height'] ?? null,
+        ];
     }
 
     private static function logInvalidImageCacheSize(string $sourcePath, string $size): void
@@ -92,6 +73,15 @@ final class FileHelper
             'size' => $size,
             'image_cache_sizes' => config('laravel-files.image_cache_sizes'),
         ]);
+    }
+
+    private static function normalizeFolders(string|int|array|Model|null $folderSource): string|int|array|null
+    {
+        if ($folderSource instanceof Model) {
+            return [$folderSource->getTable(), $folderSource->getKey()];
+        }
+
+        return $folderSource;
     }
 
     private static function isLocalhostUrl(): bool

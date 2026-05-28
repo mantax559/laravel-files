@@ -94,21 +94,17 @@ class FileService
         $sourceInfo = pathinfo($sourcePath);
         self::getPathExtension($sourcePath);
         $coverImage = ! empty($width) && ! empty($height);
-        $image = null;
+        $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
 
-        if (empty($width) || empty($height)) {
-            $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
-
-            if (empty($width) && empty($height)) {
-                $width = $image->width();
-                $height = $image->height();
-            } elseif (empty($width)) {
-                $image = $image->scale(height: $height);
-                $width = $image->width();
-            } else {
-                $image = $image->scale(width: $width);
-                $height = $image->height();
-            }
+        if (empty($width) && empty($height)) {
+            $width = $image->width();
+            $height = $image->height();
+        } elseif (empty($width)) {
+            $image = $image->scale(height: $height);
+            $width = $image->width();
+        } elseif (empty($height)) {
+            $image = $image->scale(width: $width);
+            $height = $image->height();
         }
 
         $cachePath = self::path(
@@ -117,8 +113,6 @@ class FileService
         );
 
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
-            $image ??= Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
-
             if ($coverImage) {
                 $image = $image->cover($width, $height);
             }
