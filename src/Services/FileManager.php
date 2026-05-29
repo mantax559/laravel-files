@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Services;
 
 use Illuminate\Support\Facades\File as FileFacade;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
+use Mantax559\LaravelObservability\Models\Log;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ValueError;
@@ -66,21 +66,13 @@ class FileManager
         $fileContents = self::readFileContents($file);
 
         if ($fileExtension->isImage()) {
-            self::ensureImageDimensions(
-                $fileContents,
-                config('laravel-files.max_upload_image_side_pixels'),
-                'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.'
-            );
+            self::ensureUploadImageDimensions($fileContents);
 
             $fileExtension = $fileExtension->storageImageExtension();
             $fileContents = self::prepareImageForStorage($fileContents, $fileExtension);
         }
 
-        self::ensureFileSize(
-            $fileContents,
-            config('laravel-files.max_file_size_bytes'),
-            'The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.'
-        );
+        self::ensureFileSize($fileContents, config('laravel-files.max_file_size_bytes'));
 
         $this->deleteSeederFolder($fileExtension, $folder, $transaction);
 
@@ -89,8 +81,13 @@ class FileManager
             Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
-        if (! FileStorage::save(config('laravel-files.disk'), $filePath, $fileContents)) {
-            throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
+        $errorCode = FileStorage::save(config('laravel-files.disk'), $filePath, $fileContents);
+
+        if (! empty($errorCode)) {
+            throw new UserFriendlyException(__(
+                'The file could not be stored. Please contact support with the following code: :error_code',
+                ['error_code' => $errorCode]
+            ));
         }
 
         $transaction->addUploaded($filePath);
@@ -140,12 +137,16 @@ class FileManager
                 $image = $image->cover($width, $height);
             }
 
-            if (! FileStorage::save(
+            $errorCode = FileStorage::save(
                 config('laravel-files.image_cache_disk'),
                 $cachePath,
                 $image->encodeUsingFileExtension(FileExtension::STORED_IMAGE_EXTENSION->value, quality: config('laravel-files.image_cache_quality'))->toString()
-            )) {
-                throw new RuntimeException(__('The image cache could not be stored.'));
+            );
+
+            if (! empty($errorCode)) {
+                throw new RuntimeException(__('The image cache could not be stored. Please contact support with the following code: :error_code', [
+                    'error_code' => $errorCode,
+                ]));
             }
         }
 
@@ -245,11 +246,7 @@ class FileManager
             $chunk = fread($handle, self::FILE_READ_CHUNK_BYTES);
             $contents .= $chunk;
 
-            self::ensureFileSize(
-                $contents,
-                config('laravel-files.max_upload_file_size_bytes'),
-                'The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.'
-            );
+            self::ensureFileSize($contents, config('laravel-files.max_upload_file_size_bytes'));
         }
 
         fclose($handle);
@@ -316,7 +313,7 @@ class FileManager
         return false;
     }
 
-    private static function ensureImageDimensions(string $fileContents, int|float|string $maxSide, string $message): void
+    private static function ensureUploadImageDimensions(string $fileContents): void
     {
         $imageSize = @getimagesizefromstring($fileContents);
 
@@ -325,11 +322,11 @@ class FileManager
         }
 
         if (
-            is_more($imageSize[0], $maxSide)
-            || is_more($imageSize[1], $maxSide)
+            is_more($imageSize[0], config('laravel-files.max_upload_image_side_pixels'))
+            || is_more($imageSize[1], config('laravel-files.max_upload_image_side_pixels'))
         ) {
-            throw new UserFriendlyException(__($message, [
-                'max_side' => $maxSide,
+            throw new UserFriendlyException(__('The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.', [
+                'max_side' => config('laravel-files.max_upload_image_side_pixels'),
                 'width' => $imageSize[0],
                 'height' => $imageSize[1],
             ]));
@@ -355,12 +352,12 @@ class FileManager
         )->toString();
     }
 
-    private static function ensureFileSize(string $fileContents, int|float|string $maxSize, string $message): void
+    private static function ensureFileSize(string $fileContents, int|float|string $maxSize): void
     {
         $actualSize = strlen($fileContents);
 
         if (is_more($actualSize, $maxSize)) {
-            throw new UserFriendlyException(__($message, [
+            throw new UserFriendlyException(__('The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.', [
                 'actual_size' => bytes_conversion($actualSize),
                 'max_size' => bytes_conversion((float) $maxSize),
             ]));
@@ -377,6 +374,10 @@ class FileManager
             $values[] = $extension instanceof FileExtension
                 ? $extension->value
                 : $extension;
+        }
+
+        if (empty($values)) {
+            throw new UserFriendlyException(__('File uploads are not configured. Please contact the system administrator.'));
         }
 
         return implode(', ', $values);

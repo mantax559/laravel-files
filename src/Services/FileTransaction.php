@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Mantax559\LaravelObservability\Models\Log;
 use RuntimeException;
 use Throwable;
 
@@ -41,7 +41,9 @@ final class FileTransaction
                 $transaction->rollback();
             } catch (Throwable $rollbackException) {
                 Log::error('File transaction rollback failed.', [
-                    'exception' => $rollbackException,
+                    'exception' => $rollbackException::class,
+                    'exception_message' => $rollbackException->getMessage(),
+                    'trace' => $rollbackException->getTraceAsString(),
                 ]);
             }
 

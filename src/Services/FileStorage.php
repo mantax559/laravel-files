@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Services;
 
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Mantax559\LaravelObservability\Models\Log;
 use Throwable;
 
 final class FileStorage
@@ -21,28 +21,28 @@ final class FileStorage
         return implode('/', $parts);
     }
 
-    public static function save(string $disk, string $filePath, string $fileContents): bool
+    public static function save(string $disk, string $filePath, string $fileContents): ?string
     {
         try {
             $saved = self::disk($disk)->put($filePath, $fileContents);
         } catch (Throwable $exception) {
-            Log::error('File save failed.', [
+            return Log::error('File save failed.', [
                 'disk' => $disk,
                 'path' => $filePath,
-                'exception' => $exception,
+                'exception' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
             ]);
-
-            return false;
         }
 
         if (! $saved) {
-            Log::error('File save failed.', [
+            return Log::error('File save failed.', [
                 'disk' => $disk,
                 'path' => $filePath,
             ]);
         }
 
-        return $saved;
+        return null;
     }
 
     public static function deleteFile(string $disk, string $filePath): bool
@@ -53,7 +53,9 @@ final class FileStorage
             Log::error('File delete failed.', [
                 'disk' => $disk,
                 'path' => $filePath,
-                'exception' => $exception,
+                'exception' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
             ]);
 
             return false;
@@ -79,7 +81,9 @@ final class FileStorage
             Log::error('File directory delete failed.', [
                 'disk' => $disk,
                 'path' => $folderPath,
-                'exception' => $exception,
+                'exception' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
             ]);
 
             return false;
