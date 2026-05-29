@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
+use Illuminate\Support\Facades\File as FileFacade;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
@@ -55,8 +56,8 @@ class FileManager
 
     private function save(string $file, string $folder, FileTransaction $transaction): array
     {
-        if (! is_file($file) && ! is_url($file)) {
-            throw new UserFriendlyException(__('The file could not be read. Provide a valid local path or URL.'));
+        if (! FileFacade::isFile($file) && ! Str::isUrl($file)) {
+            throw new UserFriendlyException(__('The file could not be read.'));
         }
 
         $fileExtension = self::getFileExtension($file);
@@ -64,10 +65,15 @@ class FileManager
 
         $fileContents = self::readFileContents($file);
 
-        if ($fileExtension->isConvertibleToAvif()) {
-            self::ensureImageUploadDimensions($fileContents);
-            $fileContents = self::prepareImageForStorage($fileContents);
-            $fileExtension = FileExtension::Avif;
+        if ($fileExtension->isImage()) {
+            self::ensureImageDimensions(
+                $fileContents,
+                config('laravel-files.max_upload_image_side_pixels'),
+                'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.'
+            );
+
+            $fileExtension = $fileExtension->storageImageExtension();
+            $fileContents = self::prepareImageForStorage($fileContents, $fileExtension);
         }
 
         self::ensureFileSize(
@@ -137,7 +143,7 @@ class FileManager
             if (! FileStorage::save(
                 config('laravel-files.image_cache_disk'),
                 $cachePath,
-                $image->encodeUsingFileExtension(FileExtension::Avif->value, quality: config('laravel-files.image_cache_quality'))->toString()
+                $image->encodeUsingFileExtension(FileExtension::STORED_IMAGE_EXTENSION->value, quality: config('laravel-files.image_cache_quality'))->toString()
             )) {
                 throw new RuntimeException(__('The image cache could not be stored.'));
             }
@@ -221,7 +227,7 @@ class FileManager
     {
         return FileStorage::path(
             self::getCacheImageFolder($folderSource),
-            slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::Avif->value
+            slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::STORED_IMAGE_EXTENSION->value
         );
     }
 
@@ -310,7 +316,7 @@ class FileManager
         return false;
     }
 
-    private static function ensureImageUploadDimensions(string $fileContents): void
+    private static function ensureImageDimensions(string $fileContents, int|float|string $maxSide, string $message): void
     {
         $imageSize = @getimagesizefromstring($fileContents);
 
@@ -319,21 +325,18 @@ class FileManager
         }
 
         if (
-            is_more($imageSize[0], config('laravel-files.max_upload_image_side_pixels'))
-            || is_more($imageSize[1], config('laravel-files.max_upload_image_side_pixels'))
+            is_more($imageSize[0], $maxSide)
+            || is_more($imageSize[1], $maxSide)
         ) {
-            throw new UserFriendlyException(__(
-                'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.',
-                [
-                    'max_side' => config('laravel-files.max_upload_image_side_pixels'),
-                    'width' => $imageSize[0],
-                    'height' => $imageSize[1],
-                ]
-            ));
+            throw new UserFriendlyException(__($message, [
+                'max_side' => $maxSide,
+                'width' => $imageSize[0],
+                'height' => $imageSize[1],
+            ]));
         }
     }
 
-    private static function prepareImageForStorage(string $fileContents): string
+    private static function prepareImageForStorage(string $fileContents, FileExtension $fileExtension): string
     {
         $image = Image::decodeBinary($fileContents);
 
@@ -347,7 +350,7 @@ class FileManager
         }
 
         return $image->encodeUsingFileExtension(
-            FileExtension::Avif->value,
+            $fileExtension->value,
             quality: config('laravel-files.image_cache_quality')
         )->toString();
     }

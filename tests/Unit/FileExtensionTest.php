@@ -69,14 +69,17 @@ final class FileExtensionTest extends TestCase
     }
 
     #[Test]
-    public function extension_knows_when_it_can_be_converted_to_avif(): void
+    public function extension_knows_when_it_is_an_image(): void
     {
-        $this->assertTrue(FileExtension::Avif->isConvertibleToAvif());
-        $this->assertTrue(FileExtension::Jpeg->isConvertibleToAvif());
-        $this->assertTrue(FileExtension::Jpg->isConvertibleToAvif());
-        $this->assertTrue(FileExtension::Png->isConvertibleToAvif());
-        $this->assertTrue(FileExtension::Webp->isConvertibleToAvif());
-        $this->assertFalse(FileExtension::Pdf->isConvertibleToAvif());
+        $this->assertSame(FileExtension::Avif, FileExtension::STORED_IMAGE_EXTENSION);
+        $this->assertTrue(FileExtension::Avif->isImage());
+        $this->assertTrue(FileExtension::Gif->isImage());
+        $this->assertTrue(FileExtension::Jpg->isImage());
+        $this->assertTrue(FileExtension::Png->isImage());
+        $this->assertTrue(FileExtension::Webp->isImage());
+        $this->assertFalse(FileExtension::Pdf->isImage());
+        $this->assertSame(FileExtension::STORED_IMAGE_EXTENSION, FileExtension::Jpg->storageImageExtension());
+        $this->assertSame(FileExtension::Gif, FileExtension::Gif->storageImageExtension());
     }
 
     #[Test]

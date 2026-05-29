@@ -77,7 +77,7 @@ final class FileManagerTest extends TestCase
         $this->assertStringEndsWith('.avif', $file->path);
         $this->assertTrue(Storage::disk('local')->exists($file->path));
         $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($file->path));
-        $this->assertSame(FileExtension::Avif, $file->extension);
+        $this->assertSame(FileExtension::STORED_IMAGE_EXTENSION, $file->extension);
         $this->assertSame(FileSource::Manual, $file->source);
     }
 
@@ -365,7 +365,7 @@ final class FileManagerTest extends TestCase
     public function private_extension_and_image_validation_errors_are_user_friendly(): void
     {
         $fileExtension = new ReflectionMethod(FileManager::class, 'getFileExtension');
-        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureImageUploadDimensions');
+        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureImageDimensions');
         $readFileContents = new ReflectionMethod(FileManager::class, 'readFileContents');
 
         try {
@@ -383,7 +383,7 @@ final class FileManagerTest extends TestCase
         }
 
         try {
-            $imageDimensions->invoke(null, 'not-image');
+            $imageDimensions->invoke(null, 'not-image', config('laravel-files.max_upload_image_side_pixels'), 'invalid');
             $this->fail('Expected image exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The uploaded file is not a valid image.', $exception->getMessage());
@@ -394,7 +394,12 @@ final class FileManagerTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('1x1px');
 
-        $imageDimensions->invoke(null, base64_decode(self::PNG_CONTENTS));
+        $imageDimensions->invoke(
+            null,
+            base64_decode(self::PNG_CONTENTS),
+            config('laravel-files.max_upload_image_side_pixels'),
+            'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.'
+        );
     }
 
     #[Test]
@@ -408,14 +413,14 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(300, 100, 'wide'));
 
-        $this->assertSame('wide-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS)));
+        $this->assertSame('wide-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS), FileExtension::STORED_IMAGE_EXTENSION));
 
         $this->mockImageFacade()
             ->shouldReceive('decodeBinary')
             ->once()
             ->andReturn(new FakeImage(100, 300, 'tall'));
 
-        $this->assertSame('tall-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS)));
+        $this->assertSame('tall-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS), FileExtension::STORED_IMAGE_EXTENSION));
     }
 
     private function createStoredFile(string $path, string $contents): File

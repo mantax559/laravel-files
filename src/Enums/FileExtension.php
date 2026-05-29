@@ -22,6 +22,8 @@ enum FileExtension: string
 
     public const string FOLDER_FILE = 'file';
 
+    public const self STORED_IMAGE_EXTENSION = self::Avif;
+
     case SevenZip = '7z';
     case Apng = 'apng';
     case Avi = 'avi';
@@ -108,7 +110,21 @@ enum FileExtension: string
         };
     }
 
-    public function isConvertibleToAvif(): bool
+    public function isImage(): bool
+    {
+        return cmprstr($this->folder(), self::FOLDER_IMAGE);
+    }
+
+    public function storageImageExtension(): self
+    {
+        if ($this->isConvertibleToStoredImage()) {
+            return self::STORED_IMAGE_EXTENSION;
+        }
+
+        return $this;
+    }
+
+    public function isConvertibleToStoredImage(): bool
     {
         return match ($this) {
             self::Avif,
