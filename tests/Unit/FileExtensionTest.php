@@ -81,6 +81,17 @@ final class FileExtensionTest extends TestCase
     }
 
     #[Test]
+    public function extension_knows_when_it_can_be_converted_to_avif(): void
+    {
+        $this->assertTrue(FileExtension::Avif->isConvertibleToAvif());
+        $this->assertTrue(FileExtension::Jpeg->isConvertibleToAvif());
+        $this->assertTrue(FileExtension::Jpg->isConvertibleToAvif());
+        $this->assertTrue(FileExtension::Png->isConvertibleToAvif());
+        $this->assertTrue(FileExtension::Webp->isConvertibleToAvif());
+        $this->assertFalse(FileExtension::Pdf->isConvertibleToAvif());
+    }
+
+    #[Test]
     public function mime_type_resolves_to_extension(): void
     {
         $this->assertSame(FileExtension::Zip, FileExtension::getByMimeType('application/epub+zip'));

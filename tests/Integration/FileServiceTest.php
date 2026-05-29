@@ -7,6 +7,7 @@ namespace Mantax559\LaravelFiles\Tests\Integration;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
@@ -62,7 +63,7 @@ final class FileServiceTest extends TestCase
 
         $this->assertStringStartsWith('image/products/', $path);
         $this->assertStringEndsWith('.avif', $path);
-        Storage::disk('local')->assertExists($path);
+        $this->assertTrue(Storage::disk('local')->exists($path));
         $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($path));
     }
 
@@ -139,6 +140,19 @@ final class FileServiceTest extends TestCase
     }
 
     #[Test]
+    public function storage_write_failures_are_logged_and_reported(): void
+    {
+        config(['laravel-files.disk' => 'missing']);
+
+        Log::shouldReceive('error')->once();
+
+        $this->expectException(UserFriendlyException::class);
+        $this->expectExceptionMessage('The file could not be stored');
+
+        (new FileService)->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+    }
+
+    #[Test]
     public function seeder_source_deletes_target_folder_only_once(): void
     {
         $service = new FileService(FileSource::Seeder);
@@ -146,8 +160,8 @@ final class FileServiceTest extends TestCase
         $firstPath = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
         $secondPath = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
 
-        Storage::disk('local')->assertExists($firstPath);
-        Storage::disk('local')->assertExists($secondPath);
+        $this->assertTrue(Storage::disk('local')->exists($firstPath));
+        $this->assertTrue(Storage::disk('local')->exists($secondPath));
         $this->assertStringStartsWith('seeder/document/invoices/', $firstPath);
     }
 
@@ -164,7 +178,24 @@ final class FileServiceTest extends TestCase
         $firstUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
         $secondUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
 
-        Storage::disk('public')->assertExists('cache/image/products/source-10x20.avif');
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-10x20.avif'));
+        $this->assertSame($firstUrl, $secondUrl);
+    }
+
+    #[Test]
+    public function cache_image_reuses_existing_cache_when_only_one_dimension_is_given(): void
+    {
+        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        $this->mockImageFacade()
+            ->shouldReceive('decodePath')
+            ->once()
+            ->andReturn(new FakeImage(encodedContents: 'cached'));
+
+        $service = new FileService;
+        $firstUrl = $service->cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $secondUrl = $service->cacheImage('image/products/source.jpg', null, 20, 'Products');
+
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autox20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
     }
 
@@ -184,7 +215,7 @@ final class FileServiceTest extends TestCase
         $path = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
 
         $this->assertSame(1, $service->rollbackFiles());
-        Storage::disk('local')->assertMissing($path);
+        $this->assertFalse(Storage::disk('local')->exists($path));
     }
 
     #[Test]
@@ -203,11 +234,11 @@ final class FileServiceTest extends TestCase
         $model->setAttribute($model->getKeyName(), '123');
 
         $this->assertTrue($delete->invoke($service, 'document/invoices/file.pdf', $model));
-        Storage::disk('local')->assertMissing('document/invoices/file.pdf');
-        Storage::disk('public')->assertMissing('cache/image/123/thumb.jpg');
+        $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
+        $this->assertFalse(Storage::disk('public')->exists('cache/image/123/thumb.jpg'));
 
         $this->assertSame(1, $service->rollbackFiles());
-        Storage::disk('local')->assertExists('document/invoices/file.pdf');
+        $this->assertTrue(Storage::disk('local')->exists('document/invoices/file.pdf'));
         $this->assertSame('contents', Storage::disk('local')->get('document/invoices/file.pdf'));
     }
 

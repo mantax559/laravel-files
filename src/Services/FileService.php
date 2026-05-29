@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
@@ -25,14 +26,6 @@ class FileService
     private const string FOLDER_CACHE = 'cache';
 
     private const string FOLDER_SEEDER = 'seeder';
-
-    private const array AVIF_CONVERTIBLE_EXTENSIONS = [
-        FileExtension::Avif,
-        FileExtension::Jpeg,
-        FileExtension::Jpg,
-        FileExtension::Png,
-        FileExtension::Webp,
-    ];
 
     private array $deletedSeederFolders = [];
 
@@ -52,7 +45,7 @@ class FileService
         $fileExtension = self::getFileExtension($file, $fileContents);
         self::ensureAcceptedFileExtension($fileExtension);
 
-        if (self::isConvertibleToAvif($fileExtension)) {
+        if ($fileExtension->isConvertibleToAvif()) {
             self::ensureImageUploadDimensions($fileContents);
             $fileContents = self::prepareImageForStorage($fileContents);
             $fileExtension = FileExtension::Avif;
@@ -71,7 +64,9 @@ class FileService
             Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
-        Storage::disk(config('laravel-files.disk'))->put($filePath, $fileContents);
+        if (! self::putFile(config('laravel-files.disk'), $filePath, $fileContents)) {
+            throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
+        }
 
         $this->tempFiles[] = [
             'file_path' => $filePath,
@@ -94,6 +89,12 @@ class FileService
         $sourceInfo = pathinfo($sourcePath);
         self::getPathExtension($sourcePath);
         $coverImage = ! empty($width) && ! empty($height);
+        $cachePath = self::getCacheImagePath($sourceInfo['filename'], $width, $height, $folderSource);
+
+        if (Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
+            return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
+        }
+
         $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
 
         if (empty($width) && empty($height)) {
@@ -107,20 +108,18 @@ class FileService
             $height = $image->height();
         }
 
-        $cachePath = self::path(
-            self::getCacheImageFolder($folderSource),
-            slugify($sourceInfo['filename']).'-'.$width.'x'.$height.'.'.FileExtension::Avif->value
-        );
-
         if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
             if ($coverImage) {
                 $image = $image->cover($width, $height);
             }
 
-            Storage::disk(config('laravel-files.image_cache_disk'))->put(
+            if (! self::putFile(
+                config('laravel-files.image_cache_disk'),
                 $cachePath,
                 $image->encodeUsingFileExtension(FileExtension::Avif->value, quality: config('laravel-files.image_cache_quality'))->toString()
-            );
+            )) {
+                throw new RuntimeException(__('The image cache could not be stored.'));
+            }
         }
 
         return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
@@ -130,9 +129,9 @@ class FileService
     {
         foreach ($this->tempFiles as $tempFile) {
             if ($tempFile['is_upload']) {
-                Storage::disk(config('laravel-files.disk'))->delete($tempFile['file_path']);
+                self::deleteFile(config('laravel-files.disk'), $tempFile['file_path']);
             } else {
-                Storage::disk(config('laravel-files.disk'))->put($tempFile['file_path'], base64_decode($tempFile['file']));
+                self::putFile(config('laravel-files.disk'), $tempFile['file_path'], base64_decode($tempFile['file']));
             }
         }
 
@@ -185,7 +184,7 @@ class FileService
         }
 
         if ($model) {
-            Storage::disk(config('laravel-files.image_cache_disk'))->deleteDirectory(self::getCacheImageFolder($model->getKey()));
+            self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($model->getKey()));
         }
 
         $this->tempFiles[] = [
@@ -194,7 +193,7 @@ class FileService
             'is_upload' => false,
         ];
 
-        return Storage::disk(config('laravel-files.disk'))->delete($filePath);
+        return self::deleteFile(config('laravel-files.disk'), $filePath);
     }
 
     private function deleteSeederFolder(FileExtension $fileExtension, string $folder): void
@@ -211,7 +210,7 @@ class FileService
             }
         }
 
-        Storage::disk(config('laravel-files.disk'))->deleteDirectory($folderPath);
+        self::deleteDirectory(config('laravel-files.disk'), $folderPath);
         $this->deletedSeederFolders[] = $folderPath;
     }
 
@@ -242,15 +241,88 @@ class FileService
         return self::path(...$parts);
     }
 
-    private static function isConvertibleToAvif(FileExtension $fileExtension): bool
+    private static function getCacheImagePath(string $filename, ?int $width, ?int $height, string|int|array|null $folderSource = null): string
     {
-        foreach (self::AVIF_CONVERTIBLE_EXTENSIONS as $extension) {
-            if (cmprenum($extension, $fileExtension)) {
-                return true;
-            }
+        return self::path(
+            self::getCacheImageFolder($folderSource),
+            slugify($filename).'-'.($width ?? 'auto').'x'.($height ?? 'auto').'.'.FileExtension::Avif->value
+        );
+    }
+
+    private static function putFile(string $disk, string $filePath, string $fileContents): bool
+    {
+        try {
+            $stored = self::disk($disk)->put($filePath, $fileContents);
+        } catch (Throwable $exception) {
+            Log::error('File write failed.', [
+                'disk' => $disk,
+                'path' => $filePath,
+                'exception' => $exception,
+            ]);
+
+            return false;
         }
 
-        return false;
+        if (! $stored) {
+            Log::error('File write failed.', [
+                'disk' => $disk,
+                'path' => $filePath,
+            ]);
+        }
+
+        return $stored;
+    }
+
+    private static function deleteFile(string $disk, string $filePath): bool
+    {
+        try {
+            $deleted = self::disk($disk)->delete($filePath);
+        } catch (Throwable $exception) {
+            Log::error('File delete failed.', [
+                'disk' => $disk,
+                'path' => $filePath,
+                'exception' => $exception,
+            ]);
+
+            return false;
+        }
+
+        if (! $deleted) {
+            Log::error('File delete failed.', [
+                'disk' => $disk,
+                'path' => $filePath,
+            ]);
+        }
+
+        return $deleted;
+    }
+
+    private static function deleteDirectory(string $disk, string $folderPath): bool
+    {
+        try {
+            if (! self::disk($disk)->directoryExists($folderPath)) {
+                return true;
+            }
+
+            $deleted = self::disk($disk)->deleteDirectory($folderPath);
+        } catch (Throwable $exception) {
+            Log::error('File directory delete failed.', [
+                'disk' => $disk,
+                'path' => $folderPath,
+                'exception' => $exception,
+            ]);
+
+            return false;
+        }
+
+        if (! $deleted) {
+            Log::error('File directory delete failed.', [
+                'disk' => $disk,
+                'path' => $folderPath,
+            ]);
+        }
+
+        return $deleted;
     }
 
     private static function readFileContents(string $file): string

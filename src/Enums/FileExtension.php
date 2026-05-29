@@ -203,6 +203,18 @@ enum FileExtension: string
         };
     }
 
+    public function isConvertibleToAvif(): bool
+    {
+        return match ($this) {
+            self::Avif,
+            self::Jpeg,
+            self::Jpg,
+            self::Png,
+            self::Webp => true,
+            default => false,
+        };
+    }
+
     private static function containsExtension(array $extensions, self $fileExtension): bool
     {
         foreach ($extensions as $extension) {
