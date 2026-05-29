@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
-use finfo;
 use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
@@ -29,11 +28,15 @@ class FileService
 
     private const string CACHE_AUTO_DIMENSION = 'auto';
 
+    private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
+
     private array $deletedSeederFolders = [];
 
     private array $uploadedFiles = [];
 
     private array $deletedFiles = [];
+
+    private bool $transactionActive = false;
 
     public function __construct(private FileSource $fileSource = FileSource::Manual) {}
 
@@ -43,9 +46,10 @@ class FileService
             throw new UserFriendlyException(__('The file could not be read. Provide a valid local path or URL.'));
         }
 
-        $fileContents = self::readFileContents($file);
-        $fileExtension = self::getFileExtension($file, $fileContents);
+        $fileExtension = self::getFileExtension($file);
         self::ensureAcceptedFileExtension($fileExtension);
+
+        $fileContents = self::readFileContents($file);
 
         if ($fileExtension->isConvertibleToAvif()) {
             self::ensureImageUploadDimensions($fileContents);
@@ -66,7 +70,7 @@ class FileService
             Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
-        if (! self::putFile(config('laravel-files.disk'), $filePath, $fileContents)) {
+        if (! self::saveFile(config('laravel-files.disk'), $filePath, $fileContents)) {
             throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
         }
 
@@ -86,6 +90,51 @@ class FileService
         });
     }
 
+    public function transactionWithFileRollback(callable $callback): mixed
+    {
+        if ($this->transactionActive) {
+            return $callback();
+        }
+
+        $this->transactionActive = true;
+        DB::beginTransaction();
+
+        try {
+            $result = $callback();
+
+            if (is_bool($result) && ! $result) {
+                DB::rollBack();
+                $this->rollbackFiles();
+                $this->transactionActive = false;
+
+                return false;
+            }
+
+            DB::commit();
+            $this->clearFileChanges();
+            $this->transactionActive = false;
+
+            return $result;
+        } catch (QueryException $exception) {
+            DB::rollBack();
+            $this->rollbackFiles();
+            $this->transactionActive = false;
+
+            throw new QueryException(
+                $exception->getConnectionName(),
+                $exception->getSql(),
+                $exception->getBindings(),
+                $exception->getPrevious()
+            );
+        } catch (Throwable $exception) {
+            DB::rollBack();
+            $this->rollbackFiles();
+            $this->transactionActive = false;
+
+            throw $exception;
+        }
+    }
+
     public static function cacheImage(
         string $sourcePath,
         ?int $width = null,
@@ -97,7 +146,7 @@ class FileService
         }
 
         $sourceInfo = pathinfo($sourcePath);
-        self::getPathExtension($sourcePath);
+        self::getFileExtension($sourcePath);
         $coverImage = ! empty($width) && ! empty($height);
         $cachePath = self::getCacheImagePath($sourceInfo['filename'], $width, $height, $folderSource);
 
@@ -123,7 +172,7 @@ class FileService
                 $image = $image->cover($width, $height);
             }
 
-            if (! self::putFile(
+            if (! self::saveFile(
                 config('laravel-files.image_cache_disk'),
                 $cachePath,
                 $image->encodeUsingFileExtension(FileExtension::Avif->value, quality: config('laravel-files.image_cache_quality'))->toString()
@@ -172,8 +221,6 @@ class FileService
             return true;
         }
 
-        $this->rollbackFiles();
-
         return false;
     }
 
@@ -184,14 +231,9 @@ class FileService
         }
 
         foreach ($this->deletedFiles as $deletedFile) {
-            self::putFile(config('laravel-files.disk'), $deletedFile['file_path'], base64_decode($deletedFile['file']));
+            self::saveFile(config('laravel-files.disk'), $deletedFile['file_path'], base64_decode($deletedFile['file']));
         }
 
-        $this->clearFileChanges();
-    }
-
-    private function commitFiles(): void
-    {
         $this->clearFileChanges();
     }
 
@@ -199,42 +241,6 @@ class FileService
     {
         $this->uploadedFiles = [];
         $this->deletedFiles = [];
-    }
-
-    private function transactionWithFileRollback(callable $callback): mixed
-    {
-        DB::beginTransaction();
-
-        try {
-            $result = $callback();
-
-            if (is_bool($result) && ! $result) {
-                DB::rollBack();
-                $this->rollbackFiles();
-
-                return false;
-            }
-
-            DB::commit();
-            $this->commitFiles();
-
-            return $result;
-        } catch (QueryException $exception) {
-            DB::rollBack();
-            $this->rollbackFiles();
-
-            throw new QueryException(
-                $exception->getConnectionName(),
-                $exception->getSql(),
-                $exception->getBindings(),
-                $exception->getPrevious()
-            );
-        } catch (Throwable $exception) {
-            DB::rollBack();
-            $this->rollbackFiles();
-
-            throw $exception;
-        }
     }
 
     private function deleteSeederFolder(FileExtension $fileExtension, string $folder): void
@@ -290,12 +296,12 @@ class FileService
         );
     }
 
-    private static function putFile(string $disk, string $filePath, string $fileContents): bool
+    private static function saveFile(string $disk, string $filePath, string $fileContents): bool
     {
         try {
-            $stored = self::disk($disk)->put($filePath, $fileContents);
+            $saved = self::disk($disk)->put($filePath, $fileContents);
         } catch (Throwable $exception) {
-            Log::error('File write failed.', [
+            Log::error('File save failed.', [
                 'disk' => $disk,
                 'path' => $filePath,
                 'exception' => $exception,
@@ -304,14 +310,14 @@ class FileService
             return false;
         }
 
-        if (! $stored) {
-            Log::error('File write failed.', [
+        if (! $saved) {
+            Log::error('File save failed.', [
                 'disk' => $disk,
                 'path' => $filePath,
             ]);
         }
 
-        return $stored;
+        return $saved;
     }
 
     private static function deleteFile(string $disk, string $filePath): bool
@@ -341,10 +347,6 @@ class FileService
     private static function deleteDirectory(string $disk, string $folderPath): bool
     {
         try {
-            if (! self::disk($disk)->directoryExists($folderPath)) {
-                return true;
-            }
-
             $deleted = self::disk($disk)->deleteDirectory($folderPath);
         } catch (Throwable $exception) {
             Log::error('File directory delete failed.', [
@@ -377,7 +379,7 @@ class FileService
         $contents = '';
 
         while (! feof($handle)) {
-            $chunk = fread($handle, 1024 * 1024);
+            $chunk = fread($handle, self::FILE_READ_CHUNK_BYTES);
             $contents .= $chunk;
 
             self::ensureFileSize(
@@ -392,16 +394,7 @@ class FileService
         return $contents;
     }
 
-    private static function getFileExtension(string $file, string $fileContents): FileExtension
-    {
-        try {
-            return self::getPathExtension($file);
-        } catch (UserFriendlyException) {
-            return self::getFileExtensionFromMime($fileContents);
-        }
-    }
-
-    private static function getPathExtension(string $path): FileExtension
+    private static function getFileExtension(string $path): FileExtension
     {
         $path = parse_url($path, PHP_URL_PATH) ?: $path;
         $extension = pathinfo($path, PATHINFO_EXTENSION);
@@ -411,23 +404,6 @@ class FileService
         }
 
         throw new UserFriendlyException(__('The file extension could not be detected.'));
-    }
-
-    private static function getFileExtensionFromMime(string $fileContents): FileExtension
-    {
-        $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->buffer($fileContents);
-
-        try {
-            return FileExtension::getByMimeType($mime);
-        } catch (ValueError) {
-            throw new UserFriendlyException(__(
-                'The detected MIME type :mime is not supported. Accepted formats: :extensions.',
-                [
-                    'mime' => $mime,
-                    'extensions' => self::getAcceptedExtensionsText(),
-                ]
-            ));
-        }
     }
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
