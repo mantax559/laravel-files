@@ -6,7 +6,7 @@ namespace Mantax559\LaravelFiles\Helpers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
-use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelObservability\Models\Log;
 
 final class FileHelper
@@ -25,7 +25,7 @@ final class FileHelper
     {
         [$width, $height] = self::imageCacheSize($sourcePath, $size);
 
-        return FileService::cacheImage(
+        return FileManager::cacheImage(
             $sourcePath,
             $width,
             $height,

@@ -12,7 +12,7 @@ use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
-use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
 use Mantax559\LaravelFiles\Tests\Support\FakeImage;
 use Mantax559\LaravelFiles\Tests\TestCase;
@@ -24,7 +24,7 @@ use ReflectionMethod;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-final class FileServiceTest extends TestCase
+final class FileManagerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -67,7 +67,7 @@ final class FileServiceTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'stored-image'));
 
-        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
             $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'),
             'Products',
             $transaction
@@ -84,7 +84,7 @@ final class FileServiceTest extends TestCase
     #[Test]
     public function create_keeps_non_convertible_files_in_their_folder(): void
     {
-        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
             $this->temporaryFile('%PDF-1.4', 'pdf'),
             'Invoices',
             $transaction
@@ -105,7 +105,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('The file could not be read');
 
-        (new FileService)->create('missing-file.pdf', 'Files', new FileTransaction);
+        (new FileManager)->create('missing-file.pdf', 'Files', new FileTransaction);
     }
 
     #[Test]
@@ -116,7 +116,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('pdf file format is not allowed');
 
-        (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
+        (new FileManager)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
@@ -124,7 +124,7 @@ final class FileServiceTest extends TestCase
     {
         config(['laravel-files.accept_extensions' => ['pdf']]);
 
-        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
             $this->temporaryFile('%PDF-1.4', 'pdf'),
             'Invoices',
             $transaction
@@ -139,7 +139,7 @@ final class FileServiceTest extends TestCase
         config(['laravel-files.max_upload_file_size_bytes' => 4]);
 
         try {
-            (new FileService)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
+            (new FileManager)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
             $this->fail('Expected upload size exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertStringContainsString('uploaded file is too large', $exception->getMessage());
@@ -153,7 +153,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('stored file is too large');
 
-        (new FileService)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
+        (new FileManager)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
@@ -166,7 +166,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('The file could not be stored');
 
-        (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
+        (new FileManager)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
@@ -175,7 +175,7 @@ final class FileServiceTest extends TestCase
         Storage::disk('local')->put('seeder/document/invoices/old.pdf', 'old');
 
         FileTransaction::run(function (FileTransaction $transaction): void {
-            $service = new FileService(FileSource::Seeder);
+            $service = new FileManager(FileSource::Seeder);
             $first = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
             $second = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
 
@@ -194,8 +194,8 @@ final class FileServiceTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $firstUrl = FileService::cacheImage('image/products/source.jpg', 10, 20, 'Products');
-        $secondUrl = FileService::cacheImage('image/products/source.jpg', 10, 20, 'Products');
+        $firstUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products');
+        $secondUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products');
 
         $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-10x20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
@@ -210,8 +210,8 @@ final class FileServiceTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $firstUrl = FileService::cacheImage('image/products/source.jpg', null, 20, 'Products');
-        $secondUrl = FileService::cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $firstUrl = FileManager::cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $secondUrl = FileManager::cacheImage('image/products/source.jpg', null, 20, 'Products');
 
         $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autox20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
@@ -223,7 +223,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('File does not exist');
 
-        FileService::cacheImage('missing.jpg', 10, 20);
+        FileManager::cacheImage('missing.jpg', 10, 20);
     }
 
     #[Test]
@@ -233,7 +233,7 @@ final class FileServiceTest extends TestCase
 
         try {
             FileTransaction::run(function (FileTransaction $transaction) use (&$uploadedPath): void {
-                $file = (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
+                $file = (new FileManager)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
                 $uploadedPath = $file->path;
 
                 throw new Exception('failed');
@@ -252,7 +252,7 @@ final class FileServiceTest extends TestCase
     public function transaction_removes_partially_uploaded_batch_when_later_file_fails(): void
     {
         try {
-            FileTransaction::run(fn (FileTransaction $transaction): array => (new FileService)->create([
+            FileTransaction::run(fn (FileTransaction $transaction): array => (new FileManager)->create([
                 $this->temporaryFile('%PDF-1.4', 'pdf'),
                 'missing-file.pdf',
             ], 'Invoices', $transaction));
@@ -273,7 +273,7 @@ final class FileServiceTest extends TestCase
         Storage::disk('public')->put('cache/image/'.$file->getKey().'/thumb.jpg', 'cache');
 
         FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
-            (new FileService)->destroy($file, $transaction);
+            (new FileManager)->destroy($file, $transaction);
         });
 
         $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
@@ -291,7 +291,7 @@ final class FileServiceTest extends TestCase
 
         try {
             FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
-                (new FileService)->destroy($file, $transaction);
+                (new FileManager)->destroy($file, $transaction);
 
                 throw new Exception('failed');
             });
@@ -317,7 +317,7 @@ final class FileServiceTest extends TestCase
 
         try {
             FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
-                (new FileService)->destroy($file, $transaction);
+                (new FileManager)->destroy($file, $transaction);
             });
             $this->fail('Expected exception.');
         } catch (RuntimeException $exception) {
@@ -348,7 +348,7 @@ final class FileServiceTest extends TestCase
         $this->expectExceptionMessage('missing file');
 
         FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
-            (new FileService)->destroy($file, $transaction);
+            (new FileManager)->destroy($file, $transaction);
         });
     }
 
@@ -357,16 +357,16 @@ final class FileServiceTest extends TestCase
     {
         Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
 
-        $this->assertInstanceOf(BinaryFileResponse::class, FileService::open('document/invoices/file.pdf', 'application/pdf'));
-        $this->assertInstanceOf(BinaryFileResponse::class, FileService::download('document/invoices/file.pdf'));
+        $this->assertInstanceOf(BinaryFileResponse::class, FileManager::open('document/invoices/file.pdf', 'application/pdf'));
+        $this->assertInstanceOf(BinaryFileResponse::class, FileManager::download('document/invoices/file.pdf'));
     }
 
     #[Test]
     public function private_extension_and_image_validation_errors_are_user_friendly(): void
     {
-        $fileExtension = new ReflectionMethod(FileService::class, 'getFileExtension');
-        $imageDimensions = new ReflectionMethod(FileService::class, 'ensureImageUploadDimensions');
-        $readFileContents = new ReflectionMethod(FileService::class, 'readFileContents');
+        $fileExtension = new ReflectionMethod(FileManager::class, 'getFileExtension');
+        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureImageUploadDimensions');
+        $readFileContents = new ReflectionMethod(FileManager::class, 'readFileContents');
 
         try {
             $readFileContents->invoke(null, 'missing.pdf');
@@ -400,7 +400,7 @@ final class FileServiceTest extends TestCase
     #[Test]
     public function private_prepare_image_for_storage_scales_wide_and_tall_images(): void
     {
-        $prepare = new ReflectionMethod(FileService::class, 'prepareImageForStorage');
+        $prepare = new ReflectionMethod(FileManager::class, 'prepareImageForStorage');
         config(['laravel-files.max_image_side_pixels' => 100]);
 
         $this->mockImageFacade()

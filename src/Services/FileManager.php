@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
@@ -15,10 +13,9 @@ use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Throwable;
 use ValueError;
 
-class FileService
+class FileManager
 {
     private const string FOLDER_CACHE = 'cache';
 
@@ -81,12 +78,12 @@ class FileService
 
         $this->deleteSeederFolder($fileExtension, $folder, $transaction);
 
-        $filePath = self::path(
+        $filePath = FileStorage::path(
             $this->getStorageFolderPath($fileExtension, $folder),
             Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
-        if (! self::saveFile(config('laravel-files.disk'), $filePath, $fileContents)) {
+        if (! FileStorage::save(config('laravel-files.disk'), $filePath, $fileContents)) {
             throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
         }
 
@@ -106,7 +103,7 @@ class FileService
         ?int $height = null,
         string|int|array|null $folderSource = null
     ): string {
-        if (! Storage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
+        if (! FileStorage::disk()->exists($sourcePath)) {
             throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
         }
 
@@ -115,11 +112,11 @@ class FileService
         $coverImage = ! empty($width) && ! empty($height);
         $cachePath = self::getCacheImagePath($sourceInfo['filename'], $width, $height, $folderSource);
 
-        if (Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
-            return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
+        if (FileStorage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
+            return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
         }
 
-        $image = Image::decodePath(Storage::disk(config('laravel-files.disk'))->path($sourcePath));
+        $image = Image::decodePath(FileStorage::disk()->path($sourcePath));
 
         if (empty($width) && empty($height)) {
             $width = $image->width();
@@ -132,12 +129,12 @@ class FileService
             $height = $image->height();
         }
 
-        if (! Storage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
+        if (! FileStorage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
             if ($coverImage) {
                 $image = $image->cover($width, $height);
             }
 
-            if (! self::saveFile(
+            if (! FileStorage::save(
                 config('laravel-files.image_cache_disk'),
                 $cachePath,
                 $image->encodeUsingFileExtension(FileExtension::Avif->value, quality: config('laravel-files.image_cache_quality'))->toString()
@@ -146,17 +143,17 @@ class FileService
             }
         }
 
-        return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
+        return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
     }
 
     public static function open(string $filePath, string $headerContentType): BinaryFileResponse
     {
-        return response()->file(Storage::disk(config('laravel-files.disk'))->path($filePath), ['Content-Type' => $headerContentType]);
+        return response()->file(FileStorage::disk()->path($filePath), ['Content-Type' => $headerContentType]);
     }
 
     public static function download(string $filePath): BinaryFileResponse
     {
-        return response()->download(Storage::disk(config('laravel-files.disk'))->path($filePath));
+        return response()->download(FileStorage::disk()->path($filePath));
     }
 
     private function createFile(string $file, string $folder, FileTransaction $transaction): File
@@ -166,7 +163,7 @@ class FileService
 
     private function deleteFiles(File $file, FileTransaction $transaction): void
     {
-        if (! Storage::disk(config('laravel-files.disk'))->exists($file->path)) {
+        if (! FileStorage::disk()->exists($file->path)) {
             Log::error('File model references missing file.', [
                 'disk' => config('laravel-files.disk'),
                 'path' => $file->path,
@@ -178,7 +175,7 @@ class FileService
 
         $transaction->addDeleted($file->path);
 
-        if (! self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
+        if (! FileStorage::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
             throw new RuntimeException(__('The file cache directory could not be deleted.'));
         }
     }
@@ -204,7 +201,7 @@ class FileService
         $parts[] = $fileExtension->folder();
         $parts[] = slugify($folder);
 
-        return self::path(...$parts);
+        return FileStorage::path(...$parts);
     }
 
     private static function getCacheImageFolder(string|int|array|null $folderSource = null): string
@@ -217,65 +214,15 @@ class FileService
             }
         }
 
-        return self::path(...$parts);
+        return FileStorage::path(...$parts);
     }
 
     private static function getCacheImagePath(string $filename, ?int $width, ?int $height, string|int|array|null $folderSource = null): string
     {
-        return self::path(
+        return FileStorage::path(
             self::getCacheImageFolder($folderSource),
             slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::Avif->value
         );
-    }
-
-    private static function saveFile(string $disk, string $filePath, string $fileContents): bool
-    {
-        try {
-            $saved = self::disk($disk)->put($filePath, $fileContents);
-        } catch (Throwable $exception) {
-            Log::error('File save failed.', [
-                'disk' => $disk,
-                'path' => $filePath,
-                'exception' => $exception,
-            ]);
-
-            return false;
-        }
-
-        if (! $saved) {
-            Log::error('File save failed.', [
-                'disk' => $disk,
-                'path' => $filePath,
-            ]);
-        }
-
-        return $saved;
-    }
-
-    private static function deleteDirectory(string $disk, string $folderPath): bool
-    {
-        try {
-            $deleted = self::disk($disk)->deleteDirectory($folderPath);
-        } catch (Throwable $exception) {
-            Log::error('File directory delete failed.', [
-                'disk' => $disk,
-                'path' => $folderPath,
-                'exception' => $exception,
-            ]);
-
-            return false;
-        }
-
-        if ($deleted || ! self::disk($disk)->directoryExists($folderPath)) {
-            return true;
-        }
-
-        Log::error('File directory delete failed.', [
-            'disk' => $disk,
-            'path' => $folderPath,
-        ]);
-
-        return false;
     }
 
     private static function readFileContents(string $file): string
@@ -432,13 +379,4 @@ class FileService
         return implode(', ', $values);
     }
 
-    private static function path(string ...$parts): string
-    {
-        return implode('/', $parts);
-    }
-
-    private static function disk(string $disk): FilesystemAdapter
-    {
-        return Storage::disk($disk);
-    }
 }
