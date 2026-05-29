@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Не вдалося прочитати файл. Вкажіть правильний локальний шлях або URL.",
-  "File does not exist: :path": "Файл не існує: :path",
+  "The file model could not be deleted.": "Не вдалося видалити модель файлу.",
+  "The file could not be read.": "Не вдалося прочитати файл.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Не вдалося зберегти файл. Зверніться до підтримки з таким кодом: :error_code",
+  "The file model references a missing file.": "Модель файлу посилається на відсутній файл.",
+  "The file cache directory could not be deleted.": "Не вдалося видалити каталог кешу файлу.",
   "The file could not be opened. Please try uploading it again.": "Не вдалося відкрити файл. Спробуйте завантажити його ще раз.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Завантажений файл занадто великий. Максимальний дозволений розмір: :max_size, фактичний розмір: :actual_size.",
   "The file extension could not be detected.": "Не вдалося визначити розширення файлу.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Виявлений MIME-тип :mime не підтримується. Прийнятні формати: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Формат файлу :extension не дозволений. Прийнятні формати :folder: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "Розширення файлу :extension не підтримується. Прийнятні формати: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Розширення файлу :extension не підтримується. Прийняті формати: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Формат файлу :extension не дозволений. Прийняті формати :folder: :extensions.",
   "The uploaded file is not a valid image.": "Завантажений файл не є дійсним зображенням.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Роздільна здатність зображення занадто велика. Максимальна дозволена сторона: :max_sidepx, фактична роздільна здатність: :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Збережений файл занадто великий. Максимальний дозволений розмір: :max_size, фактичний розмір: :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Роздільна здатність зображення завелика. Максимально дозволена сторона: :max_sidepx, фактична роздільна здатність: :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Файл завеликий. Максимально дозволений розмір: :max_size, фактичний розмір: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Завантаження файлів не налаштовано. Зверніться до системного адміністратора.",
+  "The file could not be moved to rollback storage.": "Не вдалося перемістити файл до сховища відкату.",
+  "The file could not be restored from rollback storage.": "Не вдалося відновити файл зі сховища відкату.",
+  "The file could not be deleted.": "Не вдалося видалити файл.",
+  "The file directory could not be deleted.": "Не вдалося видалити каталог файлу."
 }

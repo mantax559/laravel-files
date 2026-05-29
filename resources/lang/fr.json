@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Le fichier n’a pas pu être lu. Indiquez un chemin local ou une URL valide.",
-  "File does not exist: :path": "Le fichier n’existe pas : :path",
-  "The file could not be opened. Please try uploading it again.": "Le fichier n’a pas pu être ouvert. Veuillez le téléverser à nouveau.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Le fichier téléversé est trop volumineux. Taille maximale autorisée : :max_size, taille réelle : :actual_size.",
+  "The file model could not be deleted.": "Le modèle de fichier n’a pas pu être supprimé.",
+  "The file could not be read.": "Le fichier n’a pas pu être lu.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Le fichier n’a pas pu être enregistré. Veuillez contacter le support avec le code suivant : :error_code",
+  "The file model references a missing file.": "Le modèle de fichier référence un fichier manquant.",
+  "The file cache directory could not be deleted.": "Le répertoire du cache de fichiers n’a pas pu être supprimé.",
+  "The file could not be opened. Please try uploading it again.": "Le fichier n’a pas pu être ouvert. Veuillez réessayer de le téléverser.",
   "The file extension could not be detected.": "L’extension du fichier n’a pas pu être détectée.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Le type MIME détecté :mime n’est pas pris en charge. Formats acceptés : :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Le format de fichier :extension n’est pas autorisé. Formats :folder acceptés : :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "L’extension de fichier :extension n’est pas prise en charge. Formats acceptés : :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Le format de fichier :extension n’est pas autorisé. Formats :folder acceptés : :extensions.",
   "The uploaded file is not a valid image.": "Le fichier téléversé n’est pas une image valide.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La résolution de l’image est trop grande. Côté maximal autorisé : :max_sidepx, résolution réelle : :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Le fichier enregistré est trop volumineux. Taille maximale autorisée : :max_size, taille réelle : :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La résolution de l’image est trop grande. Le côté maximal autorisé est :max_sidepx, la résolution réelle est :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Le fichier est trop volumineux. Taille maximale autorisée : :max_size, taille réelle : :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Les téléversements de fichiers ne sont pas configurés. Veuillez contacter l’administrateur système.",
+  "The file could not be moved to rollback storage.": "Le fichier n’a pas pu être déplacé vers le stockage de restauration.",
+  "The file could not be restored from rollback storage.": "Le fichier n’a pas pu être restauré depuis le stockage de restauration.",
+  "The file could not be deleted.": "Le fichier n’a pas pu être supprimé.",
+  "The file directory could not be deleted.": "Le répertoire du fichier n’a pas pu être supprimé."
 }

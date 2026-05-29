@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Failo nepavyko perskaityti. Pateikite teisingą vietinį kelią arba URL.",
-  "File does not exist: :path": "Failas neegzistuoja: :path",
-  "The file could not be opened. Please try uploading it again.": "Failo nepavyko atidaryti. Pabandykite įkelti jį dar kartą.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Įkeltas failas yra per didelis. Maksimalus leidžiamas dydis yra :max_size, faktinis dydis yra :actual_size.",
+  "The file model could not be deleted.": "Failo modelio nepavyko ištrinti.",
+  "The file could not be read.": "Failo nepavyko nuskaityti.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Failo nepavyko išsaugoti. Susisiekite su pagalba ir pateikite šį kodą: :error_code",
+  "The file model references a missing file.": "Failo modelis nurodo neegzistuojantį failą.",
+  "The file cache directory could not be deleted.": "Failo podėlio katalogo nepavyko ištrinti.",
+  "The file could not be opened. Please try uploading it again.": "Failo nepavyko atidaryti. Pabandykite jį įkelti dar kartą.",
   "The file extension could not be detected.": "Failo plėtinio nepavyko nustatyti.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Nustatytas MIME tipas :mime nepalaikomas. Priimami formatai: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": ":extension failo formatas neleidžiamas. Priimami :folder formatai: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": ":extension failo plėtinys nepalaikomas. Priimami formatai: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Failo plėtinys :extension nepalaikomas. Priimami formatai: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Failo formatas :extension neleidžiamas. Priimami :folder formatai: :extensions.",
   "The uploaded file is not a valid image.": "Įkeltas failas nėra tinkamas paveikslėlis.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Paveikslėlio rezoliucija per didelė. Maksimalus leidžiamas kraštinės dydis yra :max_sidepx, faktinė rezoliucija yra :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Išsaugotas failas yra per didelis. Maksimalus leidžiamas dydis yra :max_size, faktinis dydis yra :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Paveikslėlio raiška per didelė. Didžiausia leidžiama kraštinė yra :max_sidepx, faktinė raiška yra :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Failas per didelis. Didžiausias leidžiamas dydis yra :max_size, faktinis dydis yra :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Failų įkėlimas nesukonfigūruotas. Susisiekite su sistemos administratoriumi.",
+  "The file could not be moved to rollback storage.": "Failo nepavyko perkelti į atkūrimo saugyklą.",
+  "The file could not be restored from rollback storage.": "Failo nepavyko atkurti iš atkūrimo saugyklos.",
+  "The file could not be deleted.": "Failo nepavyko ištrinti.",
+  "The file directory could not be deleted.": "Failo katalogo nepavyko ištrinti."
 }

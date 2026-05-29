@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Impossibile leggere il file. Fornisci un percorso locale o un URL valido.",
-  "File does not exist: :path": "Il file non esiste: :path",
+  "The file model could not be deleted.": "Impossibile eliminare il modello del file.",
+  "The file could not be read.": "Impossibile leggere il file.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Impossibile salvare il file. Contatta il supporto con il seguente codice: :error_code",
+  "The file model references a missing file.": "Il modello del file fa riferimento a un file mancante.",
+  "The file cache directory could not be deleted.": "Impossibile eliminare la directory della cache del file.",
   "The file could not be opened. Please try uploading it again.": "Impossibile aprire il file. Prova a caricarlo di nuovo.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Il file caricato è troppo grande. Dimensione massima consentita: :max_size, dimensione effettiva: :actual_size.",
   "The file extension could not be detected.": "Impossibile rilevare l’estensione del file.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Il tipo MIME rilevato :mime non è supportato. Formati accettati: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "L’estensione del file :extension non è supportata. Formati accettati: :extensions.",
   "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Il formato file :extension non è consentito. Formati :folder accettati: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "L’estensione file :extension non è supportata. Formati accettati: :extensions.",
   "The uploaded file is not a valid image.": "Il file caricato non è un’immagine valida.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La risoluzione dell’immagine è troppo grande. Lato massimo consentito: :max_sidepx, risoluzione effettiva: :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Il file salvato è troppo grande. Dimensione massima consentita: :max_size, dimensione effettiva: :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La risoluzione dell’immagine è troppo grande. Il lato massimo consentito è :max_sidepx, la risoluzione effettiva è :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Il file è troppo grande. Dimensione massima consentita: :max_size, dimensione effettiva: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "I caricamenti dei file non sono configurati. Contatta l’amministratore di sistema.",
+  "The file could not be moved to rollback storage.": "Impossibile spostare il file nello storage di rollback.",
+  "The file could not be restored from rollback storage.": "Impossibile ripristinare il file dallo storage di rollback.",
+  "The file could not be deleted.": "Impossibile eliminare il file.",
+  "The file directory could not be deleted.": "Impossibile eliminare la directory del file."
 }

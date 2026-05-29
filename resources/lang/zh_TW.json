@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "無法讀取檔案。請提供有效的本機路徑或 URL。",
-  "File does not exist: :path": "檔案不存在：:path",
+  "The file model could not be deleted.": "無法刪除檔案模型。",
+  "The file could not be read.": "無法讀取檔案。",
+  "The file could not be stored. Please contact support with the following code: :error_code": "無法儲存檔案。請聯絡支援並提供以下代碼：:error_code",
+  "The file model references a missing file.": "檔案模型參照了遺失的檔案。",
+  "The file cache directory could not be deleted.": "無法刪除檔案快取目錄。",
   "The file could not be opened. Please try uploading it again.": "無法開啟檔案。請嘗試重新上傳。",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "上傳的檔案過大。允許的最大大小為 :max_size，實際大小為 :actual_size。",
   "The file extension could not be detected.": "無法偵測檔案副檔名。",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "偵測到的 MIME 類型 :mime 不受支援。接受的格式：:extensions。",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "檔案格式 :extension 不被允許。接受的 :folder 格式：:extensions。",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "檔案副檔名 :extension 不受支援。接受的格式：:extensions。",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "不支援檔案副檔名 :extension。接受的格式：:extensions。",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "不允許檔案格式 :extension。接受的 :folder 格式：:extensions。",
   "The uploaded file is not a valid image.": "上傳的檔案不是有效圖片。",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "圖片解析度過大。允許的最大邊長為 :max_sidepx，實際解析度為 :widthx:heightpx。",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "儲存的檔案過大。允許的最大大小為 :max_size，實際大小為 :actual_size。"
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "檔案過大。允許的最大大小：:max_size，實際大小：:actual_size。",
+  "File uploads are not configured. Please contact the system administrator.": "檔案上傳未設定。請聯絡系統管理員。",
+  "The file could not be moved to rollback storage.": "無法將檔案移動到復原儲存。",
+  "The file could not be restored from rollback storage.": "無法從復原儲存還原檔案。",
+  "The file could not be deleted.": "無法刪除檔案。",
+  "The file directory could not be deleted.": "無法刪除檔案目錄。"
 }

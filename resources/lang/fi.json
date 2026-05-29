@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Tiedostoa ei voitu lukea. Anna kelvollinen paikallinen polku tai URL.",
-  "File does not exist: :path": "Tiedostoa ei ole olemassa: :path",
+  "The file model could not be deleted.": "Tiedostomallia ei voitu poistaa.",
+  "The file could not be read.": "Tiedostoa ei voitu lukea.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Tiedostoa ei voitu tallentaa. Ota yhteyttä tukeen ja ilmoita seuraava koodi: :error_code",
+  "The file model references a missing file.": "Tiedostomalli viittaa puuttuvaan tiedostoon.",
+  "The file cache directory could not be deleted.": "Tiedoston välimuistihakemistoa ei voitu poistaa.",
   "The file could not be opened. Please try uploading it again.": "Tiedostoa ei voitu avata. Yritä ladata se uudelleen.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Ladattu tiedosto on liian suuri. Suurin sallittu koko on :max_size, todellinen koko on :actual_size.",
   "The file extension could not be detected.": "Tiedostopäätettä ei voitu tunnistaa.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Tunnistettua MIME-tyyppiä :mime ei tueta. Hyväksytyt muodot: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Tiedostomuoto :extension ei ole sallittu. Hyväksytyt :folder-muodot: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Tiedostopäätettä :extension ei tueta. Hyväksytyt muodot: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Tiedostomuoto :extension ei ole sallittu. Hyväksytyt :folder-muodot: :extensions.",
   "The uploaded file is not a valid image.": "Ladattu tiedosto ei ole kelvollinen kuva.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Kuvan tarkkuus on liian suuri. Suurin sallittu sivu on :max_sidepx, todellinen tarkkuus on :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Tallennettu tiedosto on liian suuri. Suurin sallittu koko on :max_size, todellinen koko on :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Kuvan resoluutio on liian suuri. Suurin sallittu sivu on :max_sidepx, todellinen resoluutio on :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Tiedosto on liian suuri. Suurin sallittu koko: :max_size, todellinen koko: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Tiedostojen latauksia ei ole määritetty. Ota yhteyttä järjestelmänvalvojaan.",
+  "The file could not be moved to rollback storage.": "Tiedostoa ei voitu siirtää palautustallennukseen.",
+  "The file could not be restored from rollback storage.": "Tiedostoa ei voitu palauttaa palautustallennuksesta.",
+  "The file could not be deleted.": "Tiedostoa ei voitu poistaa.",
+  "The file directory could not be deleted.": "Tiedostohakemistoa ei voitu poistaa."
 }

@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Δεν ήταν δυνατή η ανάγνωση του αρχείου. Δώστε μια έγκυρη τοπική διαδρομή ή URL.",
-  "File does not exist: :path": "Το αρχείο δεν υπάρχει: :path",
+  "The file model could not be deleted.": "Δεν ήταν δυνατή η διαγραφή του μοντέλου αρχείου.",
+  "The file could not be read.": "Δεν ήταν δυνατή η ανάγνωση του αρχείου.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Δεν ήταν δυνατή η αποθήκευση του αρχείου. Επικοινωνήστε με την υποστήριξη με τον ακόλουθο κωδικό: :error_code",
+  "The file model references a missing file.": "Το μοντέλο αρχείου αναφέρεται σε αρχείο που λείπει.",
+  "The file cache directory could not be deleted.": "Δεν ήταν δυνατή η διαγραφή του καταλόγου cache του αρχείου.",
   "The file could not be opened. Please try uploading it again.": "Δεν ήταν δυνατό το άνοιγμα του αρχείου. Δοκιμάστε να το ανεβάσετε ξανά.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Το ανεβασμένο αρχείο είναι πολύ μεγάλο. Το μέγιστο επιτρεπόμενο μέγεθος είναι :max_size, το πραγματικό μέγεθος είναι :actual_size.",
-  "The file extension could not be detected.": "Δεν ήταν δυνατός ο εντοπισμός της επέκτασης του αρχείου.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Ο εντοπισμένος τύπος MIME :mime δεν υποστηρίζεται. Αποδεκτές μορφές: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Η μορφή αρχείου :extension δεν επιτρέπεται. Αποδεκτές μορφές :folder: :extensions.",
+  "The file extension could not be detected.": "Δεν ήταν δυνατή η ανίχνευση της επέκτασης αρχείου.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Η επέκταση αρχείου :extension δεν υποστηρίζεται. Αποδεκτές μορφές: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Η μορφή αρχείου :extension δεν επιτρέπεται. Αποδεκτές μορφές :folder: :extensions.",
   "The uploaded file is not a valid image.": "Το ανεβασμένο αρχείο δεν είναι έγκυρη εικόνα.",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Η ανάλυση της εικόνας είναι πολύ μεγάλη. Η μέγιστη επιτρεπόμενη πλευρά είναι :max_sidepx, η πραγματική ανάλυση είναι :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Το αποθηκευμένο αρχείο είναι πολύ μεγάλο. Το μέγιστο επιτρεπόμενο μέγεθος είναι :max_size, το πραγματικό μέγεθος είναι :actual_size."
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Το αρχείο είναι πολύ μεγάλο. Μέγιστο επιτρεπόμενο μέγεθος: :max_size, πραγματικό μέγεθος: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Οι μεταφορτώσεις αρχείων δεν έχουν ρυθμιστεί. Επικοινωνήστε με τον διαχειριστή συστήματος.",
+  "The file could not be moved to rollback storage.": "Δεν ήταν δυνατή η μετακίνηση του αρχείου στον χώρο αποθήκευσης επαναφοράς.",
+  "The file could not be restored from rollback storage.": "Δεν ήταν δυνατή η επαναφορά του αρχείου από τον χώρο αποθήκευσης επαναφοράς.",
+  "The file could not be deleted.": "Δεν ήταν δυνατή η διαγραφή του αρχείου.",
+  "The file directory could not be deleted.": "Δεν ήταν δυνατή η διαγραφή του καταλόγου αρχείου."
 }

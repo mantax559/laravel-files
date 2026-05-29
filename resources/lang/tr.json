@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Dosya okunamadı. Geçerli bir yerel yol veya URL girin.",
-  "File does not exist: :path": "Dosya mevcut değil: :path",
+  "The file model could not be deleted.": "Dosya modeli silinemedi.",
+  "The file could not be read.": "Dosya okunamadı.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Dosya saklanamadı. Lütfen şu kodla destek ekibiyle iletişime geçin: :error_code",
+  "The file model references a missing file.": "Dosya modeli eksik bir dosyaya başvuruyor.",
+  "The file cache directory could not be deleted.": "Dosya önbellek dizini silinemedi.",
   "The file could not be opened. Please try uploading it again.": "Dosya açılamadı. Lütfen tekrar yüklemeyi deneyin.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Yüklenen dosya çok büyük. İzin verilen en büyük boyut :max_size, gerçek boyut :actual_size.",
   "The file extension could not be detected.": "Dosya uzantısı algılanamadı.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Algılanan MIME türü :mime desteklenmiyor. Kabul edilen biçimler: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Dosya biçimi :extension izin verilmiyor. Kabul edilen :folder biçimleri: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "Dosya uzantısı :extension desteklenmiyor. Kabul edilen biçimler: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": ":extension dosya uzantısı desteklenmiyor. Kabul edilen biçimler: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": ":extension dosya biçimine izin verilmiyor. Kabul edilen :folder biçimleri: :extensions.",
   "The uploaded file is not a valid image.": "Yüklenen dosya geçerli bir resim değil.",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Resim çözünürlüğü çok büyük. İzin verilen en büyük kenar :max_sidepx, gerçek çözünürlük :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Kaydedilen dosya çok büyük. İzin verilen en büyük boyut :max_size, gerçek boyut :actual_size."
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Dosya çok büyük. İzin verilen en büyük boyut: :max_size, gerçek boyut: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Dosya yüklemeleri yapılandırılmamış. Lütfen sistem yöneticisiyle iletişime geçin.",
+  "The file could not be moved to rollback storage.": "Dosya geri alma depolamasına taşınamadı.",
+  "The file could not be restored from rollback storage.": "Dosya geri alma depolamasından geri yüklenemedi.",
+  "The file could not be deleted.": "Dosya silinemedi.",
+  "The file directory could not be deleted.": "Dosya dizini silinemedi."
 }

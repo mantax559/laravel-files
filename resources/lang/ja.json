@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "ファイルを読み取れませんでした。有効なローカルパスまたはURLを指定してください。",
-  "File does not exist: :path": "ファイルが存在しません: :path",
+  "The file model could not be deleted.": "ファイルモデルを削除できませんでした。",
+  "The file could not be read.": "ファイルを読み取れませんでした。",
+  "The file could not be stored. Please contact support with the following code: :error_code": "ファイルを保存できませんでした。次のコードを添えてサポートに連絡してください: :error_code",
+  "The file model references a missing file.": "ファイルモデルが存在しないファイルを参照しています。",
+  "The file cache directory could not be deleted.": "ファイルキャッシュディレクトリを削除できませんでした。",
   "The file could not be opened. Please try uploading it again.": "ファイルを開けませんでした。もう一度アップロードしてください。",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "アップロードされたファイルが大きすぎます。最大許容サイズは :max_size、実際のサイズは :actual_size です。",
   "The file extension could not be detected.": "ファイル拡張子を検出できませんでした。",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "検出されたMIMEタイプ :mime はサポートされていません。使用可能な形式: :extensions。",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "ファイル形式 :extension は許可されていません。使用可能な :folder 形式: :extensions。",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "ファイル拡張子 :extension はサポートされていません。使用可能な形式: :extensions。",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "ファイル形式 :extension は許可されていません。使用可能な :folder 形式: :extensions。",
   "The uploaded file is not a valid image.": "アップロードされたファイルは有効な画像ではありません。",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "画像の解像度が大きすぎます。許可される最大辺は :max_sidepx、実際の解像度は :widthx:heightpx です。",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "保存されたファイルが大きすぎます。最大許容サイズは :max_size、実際のサイズは :actual_size です。"
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "ファイルが大きすぎます。許可される最大サイズ: :max_size、実際のサイズ: :actual_size。",
+  "File uploads are not configured. Please contact the system administrator.": "ファイルアップロードが設定されていません。システム管理者に連絡してください。",
+  "The file could not be moved to rollback storage.": "ファイルをロールバックストレージに移動できませんでした。",
+  "The file could not be restored from rollback storage.": "ファイルをロールバックストレージから復元できませんでした。",
+  "The file could not be deleted.": "ファイルを削除できませんでした。",
+  "The file directory could not be deleted.": "ファイルディレクトリを削除できませんでした。"
 }
