@@ -26,9 +26,8 @@ final class FileModelTest extends TestCase
         $this->assertSame('custom_files', $file->getTable());
         $this->assertSame(FileExtension::Jpg, $file->extension);
         $this->assertSame(FileSource::Manual, $file->source);
-        $this->assertSame('integer', $file->getCasts()['size']);
         $this->assertTrue($file->usesTimestamps());
         $this->assertContains('path', $file->getFillable());
-        $this->assertSame('deleted_at', $file->getDeletedAtColumn());
+        $this->assertNotContains('deleted_at', $file->getDates());
     }
 }

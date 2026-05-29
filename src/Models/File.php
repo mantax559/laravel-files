@@ -6,14 +6,13 @@ namespace Mantax559\LaravelFiles\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
+use Mantax559\LaravelFiles\Services\FileService;
 
 class File extends Model
 {
     use HasUuids;
-    use SoftDeletes;
 
     protected $fillable = [
         'path',
@@ -34,5 +33,24 @@ class File extends Model
         parent::__construct($attributes);
 
         $this->setTable(config('laravel-files.table'));
+    }
+
+    public function delete(): ?bool
+    {
+        $fileService = new FileService;
+
+        return FileService::transactionWithFileRollback(function () use ($fileService): ?bool {
+            if (! $fileService->deleteModelFiles($this)) {
+                return false;
+            }
+
+            $deleted = parent::delete();
+
+            if (! $deleted) {
+                $fileService->rollbackFiles();
+            }
+
+            return $deleted;
+        }, $fileService);
     }
 }

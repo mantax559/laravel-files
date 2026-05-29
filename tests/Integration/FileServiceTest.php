@@ -219,25 +219,41 @@ final class FileServiceTest extends TestCase
     }
 
     #[Test]
-    public function private_delete_handles_empty_missing_model_cache_and_restore(): void
+    public function delete_model_files_deletes_source_file_and_cache_directory(): void
     {
-        $service = new FileService;
-        $delete = new ReflectionMethod(FileService::class, 'delete');
-
-        $this->assertFalse($delete->invoke($service, null));
-        $this->assertFalse($delete->invoke($service, 'missing.pdf'));
-
         Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
         Storage::disk('public')->put('cache/image/123/thumb.jpg', 'cache');
 
-        $model = new File;
-        $model->setAttribute($model->getKeyName(), '123');
+        $file = new File(['path' => 'document/invoices/file.pdf']);
+        $file->setAttribute($file->getKeyName(), '123');
 
-        $this->assertTrue($delete->invoke($service, 'document/invoices/file.pdf', $model));
+        $this->assertTrue((new FileService)->deleteModelFiles($file));
         $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
         $this->assertFalse(Storage::disk('public')->exists('cache/image/123/thumb.jpg'));
+    }
 
-        $this->assertSame(1, $service->rollbackFiles());
+    #[Test]
+    public function delete_model_files_fails_when_source_file_is_missing(): void
+    {
+        Log::shouldReceive('error')->once();
+
+        $file = new File(['path' => 'document/invoices/missing.pdf']);
+        $file->setAttribute($file->getKeyName(), '123');
+
+        $this->assertFalse((new FileService)->deleteModelFiles($file));
+    }
+
+    #[Test]
+    public function delete_model_files_restores_source_file_when_cache_delete_fails(): void
+    {
+        Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
+        config(['laravel-files.image_cache_disk' => 'missing']);
+        Log::shouldReceive('error')->once();
+
+        $file = new File(['path' => 'document/invoices/file.pdf']);
+        $file->setAttribute($file->getKeyName(), '123');
+
+        $this->assertFalse((new FileService)->deleteModelFiles($file));
         $this->assertTrue(Storage::disk('local')->exists('document/invoices/file.pdf'));
         $this->assertSame('contents', Storage::disk('local')->get('document/invoices/file.pdf'));
     }
