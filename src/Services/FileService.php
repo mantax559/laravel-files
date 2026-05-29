@@ -31,11 +31,11 @@ class FileService
 
     private array $deletedSeederFolders = [];
 
-    private array $tempFiles = [];
+    private array $uploadedFiles = [];
 
-    public function __construct(
-        private FileSource $fileSource = FileSource::Manual
-    ) {}
+    private array $deletedFiles = [];
+
+    public function __construct(private FileSource $fileSource = FileSource::Manual) {}
 
     public function save(string $file, string $folder): string
     {
@@ -70,12 +70,20 @@ class FileService
             throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
         }
 
-        $this->tempFiles[] = [
-            'file_path' => $filePath,
-            'is_upload' => true,
-        ];
+        $this->uploadedFiles[] = $filePath;
 
         return $filePath;
+    }
+
+    public function deleteModel(File $file, callable $deleteModel): ?bool
+    {
+        return $this->transactionWithFileRollback(function () use ($file, $deleteModel): ?bool {
+            if (! $this->deleteModelFiles($file)) {
+                return false;
+            }
+
+            return $deleteModel();
+        });
     }
 
     public static function cacheImage(
@@ -127,46 +135,38 @@ class FileService
         return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
     }
 
-    private function rollbackFiles(): int
+    public static function open(string $filePath, string $headerContentType): BinaryFileResponse
     {
-        foreach ($this->tempFiles as $tempFile) {
-            if ($tempFile['is_upload']) {
-                self::deleteFile(config('laravel-files.disk'), $tempFile['file_path']);
-            } else {
-                self::putFile(config('laravel-files.disk'), $tempFile['file_path'], base64_decode($tempFile['file']));
-            }
-        }
-
-        $rollbackCount = count($this->tempFiles);
-        $this->tempFiles = [];
-
-        return $rollbackCount;
+        return response()->file(Storage::disk(config('laravel-files.disk'))->path($filePath), ['Content-Type' => $headerContentType]);
     }
 
-    public function deleteModelFiles(File $file): bool
+    public static function download(string $filePath): BinaryFileResponse
     {
-        if (empty($file->path)) {
-            return false;
-        }
+        return response()->download(Storage::disk(config('laravel-files.disk'))->path($filePath));
+    }
 
+    private function deleteModelFiles(File $file): bool
+    {
         if (! Storage::disk(config('laravel-files.disk'))->exists($file->path)) {
-            Log::error('File delete failed.', [
+            Log::error('File model references missing file.', [
                 'disk' => config('laravel-files.disk'),
                 'path' => $file->path,
+                'file_id' => $file->getKey(),
             ]);
 
             return false;
         }
 
-        $this->tempFiles[] = [
-            'file_path' => $file->path,
-            'file' => base64_encode(Storage::disk(config('laravel-files.disk'))->get($file->path)),
-            'is_upload' => false,
-        ];
+        $fileBackup = base64_encode(Storage::disk(config('laravel-files.disk'))->get($file->path));
 
         if (! self::deleteFile(config('laravel-files.disk'), $file->path)) {
             return false;
         }
+
+        $this->deletedFiles[] = [
+            'file_path' => $file->path,
+            'file' => $fileBackup,
+        ];
 
         if (self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
             return true;
@@ -177,7 +177,31 @@ class FileService
         return false;
     }
 
-    public static function transactionWithFileRollback(callable $callback, FileService $service): mixed
+    private function rollbackFiles(): void
+    {
+        foreach ($this->uploadedFiles as $uploadedFile) {
+            self::deleteFile(config('laravel-files.disk'), $uploadedFile);
+        }
+
+        foreach ($this->deletedFiles as $deletedFile) {
+            self::putFile(config('laravel-files.disk'), $deletedFile['file_path'], base64_decode($deletedFile['file']));
+        }
+
+        $this->clearFileChanges();
+    }
+
+    private function commitFiles(): void
+    {
+        $this->clearFileChanges();
+    }
+
+    private function clearFileChanges(): void
+    {
+        $this->uploadedFiles = [];
+        $this->deletedFiles = [];
+    }
+
+    private function transactionWithFileRollback(callable $callback): mixed
     {
         DB::beginTransaction();
 
@@ -186,17 +210,18 @@ class FileService
 
             if (is_bool($result) && ! $result) {
                 DB::rollBack();
-                $service->rollbackFiles();
+                $this->rollbackFiles();
 
                 return false;
             }
 
             DB::commit();
+            $this->commitFiles();
 
             return $result;
         } catch (QueryException $exception) {
             DB::rollBack();
-            $service->rollbackFiles();
+            $this->rollbackFiles();
 
             throw new QueryException(
                 $exception->getConnectionName(),
@@ -206,20 +231,10 @@ class FileService
             );
         } catch (Throwable $exception) {
             DB::rollBack();
-            $service->rollbackFiles();
+            $this->rollbackFiles();
 
             throw $exception;
         }
-    }
-
-    public static function open(string $filePath, string $headerContentType): BinaryFileResponse
-    {
-        return response()->file(Storage::disk(config('laravel-files.disk'))->path($filePath), ['Content-Type' => $headerContentType]);
-    }
-
-    public static function download(string $filePath): BinaryFileResponse
-    {
-        return response()->download(Storage::disk(config('laravel-files.disk'))->path($filePath));
     }
 
     private function deleteSeederFolder(FileExtension $fileExtension, string $folder): void

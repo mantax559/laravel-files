@@ -39,12 +39,8 @@ class File extends Model
     {
         $fileService = new FileService;
 
-        return FileService::transactionWithFileRollback(function () use ($fileService): ?bool {
-            if (! $fileService->deleteModelFiles($this)) {
-                return false;
-            }
-
+        return $fileService->deleteModel($this, function (): ?bool {
             return parent::delete();
-        }, $fileService);
+        });
     }
 }
