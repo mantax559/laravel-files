@@ -12,7 +12,7 @@ use Throwable;
 
 final class FileTransaction
 {
-    private const string FOLDER_ROLLBACK_TEMP = '.rollback-temp';
+    private const string FOLDER_ROLLBACK_TMP = '.rollback-tmp';
 
     private readonly string $folder;
 
@@ -20,11 +20,9 @@ final class FileTransaction
 
     private array $deleted = [];
 
-    private array $deletedDirectories = [];
-
     public function __construct()
     {
-        $this->folder = FileStorage::path(self::FOLDER_ROLLBACK_TEMP, Str::uuid7()->toString());
+        $this->folder = FileStorage::path(self::FOLDER_ROLLBACK_TMP, Str::uuid7()->toString());
     }
 
     public static function run(callable $callback): mixed
@@ -58,38 +56,22 @@ final class FileTransaction
 
     public function addDeleted(string $path): void
     {
-        $tempPath = FileStorage::path($this->folder, $path);
+        $tmpPath = FileStorage::path($this->folder, $path);
 
-        if (! FileStorage::disk(config('laravel-files.disk'))->move($path, $tempPath)) {
+        if (! FileStorage::disk(config('laravel-files.disk'))->move($path, $tmpPath)) {
             throw new RuntimeException(__('The file could not be moved to rollback storage.'));
         }
 
         $this->deleted[] = [
             'path' => $path,
-            'temp_path' => $tempPath,
+            'tmp_path' => $tmpPath,
         ];
-    }
-
-    public function addDeletedDirectory(string $path): void
-    {
-        foreach ($this->deletedDirectories as $deletedDirectory) {
-            if (cmprstr($deletedDirectory, $path)) {
-                return;
-            }
-        }
-
-        foreach (FileStorage::disk(config('laravel-files.disk'))->allFiles($path) as $filePath) {
-            $this->addDeleted($filePath);
-        }
-
-        self::deleteDirectory($path);
-        $this->deletedDirectories[] = $path;
     }
 
     public function commit(): void
     {
         foreach ($this->deleted as $file) {
-            self::deleteFile($file['temp_path']);
+            self::deleteFile($file['tmp_path']);
         }
 
         self::deleteDirectory($this->folder);
@@ -103,11 +85,7 @@ final class FileTransaction
         }
 
         foreach ($this->deleted as $file) {
-            if (FileStorage::disk(config('laravel-files.disk'))->exists($file['path'])) {
-                self::deleteFile($file['path']);
-            }
-
-            if (! FileStorage::disk(config('laravel-files.disk'))->move($file['temp_path'], $file['path'])) {
+            if (! FileStorage::disk(config('laravel-files.disk'))->move($file['tmp_path'], $file['path'])) {
                 throw new RuntimeException(__('The file could not be restored from rollback storage.'));
             }
         }
@@ -120,7 +98,6 @@ final class FileTransaction
     {
         $this->uploaded = [];
         $this->deleted = [];
-        $this->deletedDirectories = [];
     }
 
     private static function deleteFile(string $path): void

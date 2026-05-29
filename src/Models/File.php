@@ -7,7 +7,6 @@ namespace Mantax559\LaravelFiles\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileSource;
 
 class File extends Model
 {
@@ -16,13 +15,11 @@ class File extends Model
     protected $fillable = [
         'path',
         'extension',
-        'source',
         'size',
     ];
 
     protected $casts = [
         'extension' => FileExtension::class,
-        'source' => FileSource::class,
     ];
 
     public $timestamps = true;

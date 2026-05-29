@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\File as FileFacade;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use Mantax559\LaravelObservability\Models\Log;
@@ -21,13 +20,9 @@ class FileManager
 {
     private const string FOLDER_CACHE = 'cache';
 
-    private const string FOLDER_SEEDER = 'seeder';
-
     private const string CACHE_AUTO_DIMENSION = 'auto';
 
     private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
-
-    public function __construct(private FileSource $fileSource = FileSource::Manual) {}
 
     public function create(string|array $files, string $folder, FileTransaction $transaction): File|array
     {
@@ -75,10 +70,8 @@ class FileManager
 
         self::ensureFileSize($fileContents, config('laravel-files.max_file_size_bytes'));
 
-        $this->deleteSeederFolder($fileExtension, $folder, $transaction);
-
         $filePath = FileStorage::path(
-            $this->getStorageFolderPath($fileExtension, $folder),
+            FileStorage::path($fileExtension->folder(), slugify($folder)),
             Str::uuid7()->toString().'.'.$fileExtension->value
         );
 
@@ -96,7 +89,6 @@ class FileManager
         return [
             'path' => $filePath,
             'extension' => $fileExtension,
-            'source' => $this->fileSource,
             'size' => strlen($fileContents),
         ];
     }
@@ -196,30 +188,6 @@ class FileManager
         if (! FileStorage::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
             throw new RuntimeException(__('The file cache directory could not be deleted.'));
         }
-    }
-
-    private function deleteSeederFolder(FileExtension $fileExtension, string $folder, FileTransaction $transaction): void
-    {
-        if (! cmprenum($this->fileSource, FileSource::Seeder)) {
-            return;
-        }
-
-        $folderPath = $this->getStorageFolderPath($fileExtension, $folder);
-        $transaction->addDeletedDirectory($folderPath);
-    }
-
-    private function getStorageFolderPath(FileExtension $fileExtension, string $folder): string
-    {
-        $parts = [];
-
-        if (cmprenum($this->fileSource, FileSource::Seeder)) {
-            $parts[] = self::FOLDER_SEEDER;
-        }
-
-        $parts[] = $fileExtension->folder();
-        $parts[] = slugify($folder);
-
-        return FileStorage::path(...$parts);
     }
 
     private static function getCacheImageFolder(string|int|array|null $folderSource = null): string
@@ -393,5 +361,4 @@ class FileManager
 
         return implode(', ', $values);
     }
-
 }

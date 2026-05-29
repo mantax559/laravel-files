@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
@@ -78,7 +77,6 @@ final class FileManagerTest extends TestCase
         $this->assertTrue(Storage::disk('local')->exists($file->path));
         $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($file->path));
         $this->assertSame(FileExtension::STORED_IMAGE_EXTENSION, $file->extension);
-        $this->assertSame(FileSource::Manual, $file->source);
     }
 
     #[Test]
@@ -167,22 +165,6 @@ final class FileManagerTest extends TestCase
         $this->expectExceptionMessage('The file could not be stored');
 
         (new FileManager)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
-    }
-
-    #[Test]
-    public function seeder_source_deletes_target_folder_only_once_per_transaction(): void
-    {
-        Storage::disk('local')->put('seeder/document/invoices/old.pdf', 'old');
-
-        FileTransaction::run(function (FileTransaction $transaction): void {
-            $service = new FileManager(FileSource::Seeder);
-            $first = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
-            $second = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
-
-            $this->assertTrue(Storage::disk('local')->exists($first->path));
-            $this->assertTrue(Storage::disk('local')->exists($second->path));
-            $this->assertFalse(Storage::disk('local')->exists('seeder/document/invoices/old.pdf'));
-        });
     }
 
     #[Test]
@@ -338,7 +320,6 @@ final class FileManagerTest extends TestCase
         $file = File::query()->create([
             'path' => 'document/invoices/missing.pdf',
             'extension' => FileExtension::Pdf,
-            'source' => FileSource::Manual,
             'size' => 8,
         ]);
 
@@ -430,14 +411,13 @@ final class FileManagerTest extends TestCase
         return File::query()->create([
             'path' => $path,
             'extension' => FileExtension::Pdf,
-            'source' => FileSource::Manual,
             'size' => strlen($contents),
         ]);
     }
 
     private function assertRollbackTempEmpty(): void
     {
-        $this->assertSame([], Storage::disk('local')->allFiles('.rollback-temp'));
+        $this->assertSame([], Storage::disk('local')->allFiles('.rollback-tmp'));
     }
 
     private function temporaryFile(string $contents, string $extension): string

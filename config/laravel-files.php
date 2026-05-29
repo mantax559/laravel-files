@@ -11,7 +11,7 @@ return [
     | Files Table
     |--------------------------------------------------------------------------
     |
-    | This table stores file metadata such as path, extension, source, and size.
+    | This table stores file metadata such as path, extension, and size.
     | The package model and migration both read this value, so change it before
     | migrating when your application needs a custom table name.
     |
