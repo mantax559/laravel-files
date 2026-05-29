@@ -18,7 +18,6 @@ use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
-use ValueError;
 
 class FileService
 {
@@ -299,7 +298,7 @@ class FileService
     private static function saveFile(string $disk, string $filePath, string $fileContents): bool
     {
         try {
-            $saved = self::disk($disk)->put($filePath, $fileContents);
+            $saved = Storage::disk($disk)->put($filePath, $fileContents);
         } catch (Throwable $exception) {
             Log::error('File save failed.', [
                 'disk' => $disk,
@@ -323,7 +322,7 @@ class FileService
     private static function deleteFile(string $disk, string $filePath): bool
     {
         try {
-            $deleted = self::disk($disk)->delete($filePath);
+            $deleted = Storage::disk($disk)->delete($filePath);
         } catch (Throwable $exception) {
             Log::error('File delete failed.', [
                 'disk' => $disk,
@@ -347,7 +346,7 @@ class FileService
     private static function deleteDirectory(string $disk, string $folderPath): bool
     {
         try {
-            $deleted = self::disk($disk)->deleteDirectory($folderPath);
+            $deleted = Storage::disk($disk)->deleteDirectory($folderPath);
         } catch (Throwable $exception) {
             Log::error('File directory delete failed.', [
                 'disk' => $disk,
@@ -400,7 +399,7 @@ class FileService
         $extension = pathinfo($path, PATHINFO_EXTENSION);
 
         if (! empty($extension)) {
-            return self::getEnumExtension($extension);
+            return self::parseFileExtension($extension);
         }
 
         throw new UserFriendlyException(__('The file extension could not be detected.'));
@@ -408,7 +407,7 @@ class FileService
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
     {
-        if (self::containsExtension(self::getAcceptedExtensions($fileExtension), $fileExtension)) {
+        if (self::containsExtension(self::acceptedExtensions($fileExtension), $fileExtension)) {
             return;
         }
 
@@ -422,36 +421,15 @@ class FileService
         ));
     }
 
-    private static function getAcceptedExtensions(FileExtension $fileExtension): array
-    {
-        return self::normalizeExtensions(config('laravel-files.accept_'.$fileExtension->folder().'_extensions'));
-    }
-
-    private static function normalizeExtensions(array $extensions): array
-    {
-        $normalizedExtensions = [];
-
-        foreach ($extensions as $extension) {
-            $normalizedExtensions[] = self::normalizeExtension($extension);
-        }
-
-        return $normalizedExtensions;
-    }
-
-    private static function normalizeExtension(FileExtension|string $extension): FileExtension
+    private static function parseFileExtension(FileExtension|string $extension): FileExtension
     {
         if ($extension instanceof FileExtension) {
             return $extension;
         }
 
-        return self::getEnumExtension($extension);
-    }
+        $fileExtension = FileExtension::tryFrom(strtolower($extension));
 
-    private static function getEnumExtension(string $extension): FileExtension
-    {
-        try {
-            return FileExtension::getEnumByString($extension);
-        } catch (ValueError) {
+        if (! $fileExtension instanceof FileExtension) {
             throw new UserFriendlyException(__(
                 'The :extension file extension is not supported. Accepted formats: :extensions.',
                 [
@@ -460,6 +438,36 @@ class FileService
                 ]
             ));
         }
+
+        return $fileExtension;
+    }
+
+    private static function acceptedExtensions(?FileExtension $fileExtension = null): array
+    {
+        $extensions = match ($fileExtension?->folder()) {
+            FileExtension::FOLDER_ARCHIVE => config('laravel-files.accept_archive_extensions'),
+            FileExtension::FOLDER_AUDIO => config('laravel-files.accept_audio_extensions'),
+            FileExtension::FOLDER_DOCUMENT => config('laravel-files.accept_document_extensions'),
+            FileExtension::FOLDER_IMAGE => config('laravel-files.accept_image_extensions'),
+            FileExtension::FOLDER_VIDEO => config('laravel-files.accept_video_extensions'),
+            FileExtension::FOLDER_FILE => config('laravel-files.accept_file_extensions'),
+            default => [
+                ...config('laravel-files.accept_archive_extensions'),
+                ...config('laravel-files.accept_audio_extensions'),
+                ...config('laravel-files.accept_document_extensions'),
+                ...config('laravel-files.accept_image_extensions'),
+                ...config('laravel-files.accept_video_extensions'),
+                ...config('laravel-files.accept_file_extensions'),
+            ],
+        };
+
+        $acceptedExtensions = [];
+
+        foreach ($extensions as $extension) {
+            $acceptedExtensions[] = self::parseFileExtension($extension);
+        }
+
+        return $acceptedExtensions;
     }
 
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
@@ -529,16 +537,7 @@ class FileService
 
     private static function getAcceptedExtensionsText(?FileExtension $fileExtension = null): string
     {
-        $extensions = $fileExtension
-            ? self::getAcceptedExtensions($fileExtension)
-            : [
-                ...self::normalizeExtensions(config('laravel-files.accept_archive_extensions')),
-                ...self::normalizeExtensions(config('laravel-files.accept_audio_extensions')),
-                ...self::normalizeExtensions(config('laravel-files.accept_document_extensions')),
-                ...self::normalizeExtensions(config('laravel-files.accept_image_extensions')),
-                ...self::normalizeExtensions(config('laravel-files.accept_video_extensions')),
-                ...self::normalizeExtensions(config('laravel-files.accept_file_extensions')),
-            ];
+        $extensions = self::acceptedExtensions($fileExtension);
 
         $values = [];
 
