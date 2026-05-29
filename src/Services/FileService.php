@@ -73,7 +73,9 @@ class FileService
             throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
         }
 
-        $this->uploadedFiles[] = $filePath;
+        if ($this->transactionActive) {
+            $this->uploadedFiles[] = $filePath;
+        }
 
         return $filePath;
     }
@@ -298,7 +300,7 @@ class FileService
     private static function saveFile(string $disk, string $filePath, string $fileContents): bool
     {
         try {
-            $saved = Storage::disk($disk)->put($filePath, $fileContents);
+            $saved = self::disk($disk)->put($filePath, $fileContents);
         } catch (Throwable $exception) {
             Log::error('File save failed.', [
                 'disk' => $disk,
@@ -322,7 +324,7 @@ class FileService
     private static function deleteFile(string $disk, string $filePath): bool
     {
         try {
-            $deleted = Storage::disk($disk)->delete($filePath);
+            $deleted = self::disk($disk)->delete($filePath);
         } catch (Throwable $exception) {
             Log::error('File delete failed.', [
                 'disk' => $disk,
@@ -346,7 +348,7 @@ class FileService
     private static function deleteDirectory(string $disk, string $folderPath): bool
     {
         try {
-            $deleted = Storage::disk($disk)->deleteDirectory($folderPath);
+            $deleted = self::disk($disk)->deleteDirectory($folderPath);
         } catch (Throwable $exception) {
             Log::error('File directory delete failed.', [
                 'disk' => $disk,
@@ -357,14 +359,16 @@ class FileService
             return false;
         }
 
-        if (! $deleted) {
-            Log::error('File directory delete failed.', [
-                'disk' => $disk,
-                'path' => $folderPath,
-            ]);
+        if ($deleted || ! self::disk($disk)->directoryExists($folderPath)) {
+            return true;
         }
 
-        return $deleted;
+        Log::error('File directory delete failed.', [
+            'disk' => $disk,
+            'path' => $folderPath,
+        ]);
+
+        return false;
     }
 
     private static function readFileContents(string $file): string
@@ -421,12 +425,8 @@ class FileService
         ));
     }
 
-    private static function parseFileExtension(FileExtension|string $extension): FileExtension
+    private static function parseFileExtension(string $extension): FileExtension
     {
-        if ($extension instanceof FileExtension) {
-            return $extension;
-        }
-
         $fileExtension = FileExtension::tryFrom(strtolower($extension));
 
         if (! $fileExtension instanceof FileExtension) {
@@ -444,7 +444,7 @@ class FileService
 
     private static function acceptedExtensions(?FileExtension $fileExtension = null): array
     {
-        $extensions = match ($fileExtension?->folder()) {
+        return match ($fileExtension?->folder()) {
             FileExtension::FOLDER_ARCHIVE => config('laravel-files.accept_archive_extensions'),
             FileExtension::FOLDER_AUDIO => config('laravel-files.accept_audio_extensions'),
             FileExtension::FOLDER_DOCUMENT => config('laravel-files.accept_document_extensions'),
@@ -460,14 +460,6 @@ class FileService
                 ...config('laravel-files.accept_file_extensions'),
             ],
         };
-
-        $acceptedExtensions = [];
-
-        foreach ($extensions as $extension) {
-            $acceptedExtensions[] = self::parseFileExtension($extension);
-        }
-
-        return $acceptedExtensions;
     }
 
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
