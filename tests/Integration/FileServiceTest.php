@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Tests\Integration;
 
 use Exception;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
@@ -14,6 +13,7 @@ use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 use Mantax559\LaravelFiles\Tests\Support\FakeImage;
 use Mantax559\LaravelFiles\Tests\TestCase;
 use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
@@ -26,6 +26,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class FileServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     private const string PNG_CONTENTS = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=';
 
     protected function setUp(): void
@@ -52,77 +54,86 @@ final class FileServiceTest extends TestCase
     }
 
     #[Test]
-    public function save_converts_supported_images_to_avif(): void
+    public function create_converts_supported_images_to_avif(): void
     {
         $this->mockImageFacade()
             ->shouldReceive('decodeBinary')
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'stored-image'));
 
-        $path = (new FileService)->save($this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'), 'Products');
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+            $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'),
+            'Products',
+            $transaction
+        ));
 
-        $this->assertStringStartsWith('image/products/', $path);
-        $this->assertStringEndsWith('.avif', $path);
-        $this->assertTrue(Storage::disk('local')->exists($path));
-        $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($path));
+        $this->assertStringStartsWith('image/products/', $file->path);
+        $this->assertStringEndsWith('.avif', $file->path);
+        $this->assertTrue(Storage::disk('local')->exists($file->path));
+        $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($file->path));
+        $this->assertSame(FileExtension::Avif, $file->extension);
+        $this->assertSame(FileSource::Manual, $file->source);
     }
 
     #[Test]
-    public function save_keeps_non_convertible_files_in_their_folder(): void
+    public function create_keeps_non_convertible_files_in_their_folder(): void
     {
-        $path = (new FileService)->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+            $this->temporaryFile('%PDF-1.4', 'pdf'),
+            'Invoices',
+            $transaction
+        ));
 
-        $this->assertStringStartsWith('document/invoices/', $path);
-        $this->assertStringEndsWith('.pdf', $path);
-        $this->assertSame('%PDF-1.4', Storage::disk('local')->get($path));
+        $this->assertStringStartsWith('document/invoices/', $file->path);
+        $this->assertStringEndsWith('.pdf', $file->path);
+        $this->assertSame('%PDF-1.4', Storage::disk('local')->get($file->path));
+        $this->assertDatabaseHas(config('laravel-files.table'), [
+            'id' => $file->getKey(),
+            'path' => $file->path,
+        ]);
     }
 
     #[Test]
-    public function save_uses_mime_type_when_extension_is_missing(): void
-    {
-        $path = (new FileService)->save($this->temporaryFile('hello', ''), 'Texts');
-
-        $this->assertStringStartsWith('document/texts/', $path);
-        $this->assertStringEndsWith('.txt', $path);
-    }
-
-    #[Test]
-    public function save_rejects_unreadable_paths_and_unsupported_extensions(): void
+    public function create_rejects_unreadable_paths_and_unsupported_extensions(): void
     {
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('The file could not be read');
 
-        (new FileService)->save('missing-file.pdf', 'Files');
+        (new FileService)->create('missing-file.pdf', 'Files', new FileTransaction);
     }
 
     #[Test]
-    public function save_rejects_extensions_that_are_not_configured_for_their_folder(): void
+    public function create_rejects_extensions_that_are_not_configured_for_their_folder(): void
     {
         config(['laravel-files.accept_document_extensions' => [FileExtension::Txt]]);
 
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('pdf file format is not allowed');
 
-        (new FileService)->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+        (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
-    public function save_accepts_string_extensions_from_config(): void
+    public function create_accepts_string_extensions_from_config(): void
     {
         config(['laravel-files.accept_document_extensions' => ['pdf']]);
 
-        $path = (new FileService)->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
+            $this->temporaryFile('%PDF-1.4', 'pdf'),
+            'Invoices',
+            $transaction
+        ));
 
-        $this->assertStringEndsWith('.pdf', $path);
+        $this->assertStringEndsWith('.pdf', $file->path);
     }
 
     #[Test]
-    public function save_reports_storage_and_upload_size_limits(): void
+    public function create_reports_storage_and_upload_size_limits(): void
     {
         config(['laravel-files.max_upload_file_size_bytes' => 4]);
 
         try {
-            (new FileService)->save($this->temporaryFile('12345', 'pdf'), 'Invoices');
+            (new FileService)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
             $this->fail('Expected upload size exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertStringContainsString('uploaded file is too large', $exception->getMessage());
@@ -136,7 +147,7 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('stored file is too large');
 
-        (new FileService)->save($this->temporaryFile('12345', 'pdf'), 'Invoices');
+        (new FileService)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
@@ -149,20 +160,23 @@ final class FileServiceTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('The file could not be stored');
 
-        (new FileService)->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+        (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]
-    public function seeder_source_deletes_target_folder_only_once(): void
+    public function seeder_source_deletes_target_folder_only_once_per_transaction(): void
     {
-        $service = new FileService(FileSource::Seeder);
+        Storage::disk('local')->put('seeder/document/invoices/old.pdf', 'old');
 
-        $firstPath = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
-        $secondPath = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
+        FileTransaction::run(function (FileTransaction $transaction): void {
+            $service = new FileService(FileSource::Seeder);
+            $first = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
+            $second = $service->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
 
-        $this->assertTrue(Storage::disk('local')->exists($firstPath));
-        $this->assertTrue(Storage::disk('local')->exists($secondPath));
-        $this->assertStringStartsWith('seeder/document/invoices/', $firstPath);
+            $this->assertTrue(Storage::disk('local')->exists($first->path));
+            $this->assertTrue(Storage::disk('local')->exists($second->path));
+            $this->assertFalse(Storage::disk('local')->exists('seeder/document/invoices/old.pdf'));
+        });
     }
 
     #[Test]
@@ -174,9 +188,8 @@ final class FileServiceTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $service = new FileService;
-        $firstUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
-        $secondUrl = $service->cacheImage('image/products/source.jpg', 10, 20, 'Products');
+        $firstUrl = FileService::cacheImage('image/products/source.jpg', 10, 20, 'Products');
+        $secondUrl = FileService::cacheImage('image/products/source.jpg', 10, 20, 'Products');
 
         $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-10x20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
@@ -191,9 +204,8 @@ final class FileServiceTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $service = new FileService;
-        $firstUrl = $service->cacheImage('image/products/source.jpg', null, 20, 'Products');
-        $secondUrl = $service->cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $firstUrl = FileService::cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $secondUrl = FileService::cacheImage('image/products/source.jpg', null, 20, 'Products');
 
         $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autox20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
@@ -205,112 +217,133 @@ final class FileServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('File does not exist');
 
-        (new FileService)->cacheImage('missing.jpg', 10, 20);
+        FileService::cacheImage('missing.jpg', 10, 20);
     }
 
     #[Test]
-    public function rollback_deletes_uploaded_files(): void
+    public function transaction_removes_uploaded_files_when_callback_throws(): void
     {
-        $service = new FileService;
-        $path = $service->save($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices');
-
-        $this->assertSame(1, $service->rollbackFiles());
-        $this->assertFalse(Storage::disk('local')->exists($path));
-    }
-
-    #[Test]
-    public function delete_model_files_deletes_source_file_and_cache_directory(): void
-    {
-        Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
-        Storage::disk('public')->put('cache/image/123/thumb.jpg', 'cache');
-
-        $file = new File(['path' => 'document/invoices/file.pdf']);
-        $file->setAttribute($file->getKeyName(), '123');
-
-        $this->assertTrue((new FileService)->deleteModelFiles($file));
-        $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
-        $this->assertFalse(Storage::disk('public')->exists('cache/image/123/thumb.jpg'));
-    }
-
-    #[Test]
-    public function delete_model_files_fails_when_source_file_is_missing(): void
-    {
-        Log::shouldReceive('error')->once();
-
-        $file = new File(['path' => 'document/invoices/missing.pdf']);
-        $file->setAttribute($file->getKeyName(), '123');
-
-        $this->assertFalse((new FileService)->deleteModelFiles($file));
-    }
-
-    #[Test]
-    public function delete_model_files_restores_source_file_when_cache_delete_fails(): void
-    {
-        Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
-        config(['laravel-files.image_cache_disk' => 'missing']);
-        Log::shouldReceive('error')->once();
-
-        $file = new File(['path' => 'document/invoices/file.pdf']);
-        $file->setAttribute($file->getKeyName(), '123');
-
-        $this->assertFalse((new FileService)->deleteModelFiles($file));
-        $this->assertTrue(Storage::disk('local')->exists('document/invoices/file.pdf'));
-        $this->assertSame('contents', Storage::disk('local')->get('document/invoices/file.pdf'));
-    }
-
-    #[Test]
-    public function transaction_commits_successful_callback(): void
-    {
-        DB::shouldReceive('beginTransaction')->once();
-        DB::shouldReceive('commit')->once();
-
-        $called = false;
-
-        FileService::transactionWithFileRollback(function () use (&$called): void {
-            $called = true;
-        }, new FileService);
-
-        $this->assertTrue($called);
-    }
-
-    #[Test]
-    public function transaction_rolls_back_query_exception_and_throwable(): void
-    {
-        $service = new class extends FileService
-        {
-            public int $rollbacks = 0;
-
-            public function rollbackFiles(): int
-            {
-                $this->rollbacks++;
-
-                return $this->rollbacks;
-            }
-        };
-
-        DB::shouldReceive('beginTransaction')->twice();
-        DB::shouldReceive('rollBack')->twice();
+        $uploadedPath = null;
 
         try {
-            FileService::transactionWithFileRollback(
-                fn (): never => throw new QueryException('testing', 'select 1', [], new Exception('query failed')),
-                $service
-            );
-            $this->fail('Expected query exception.');
-        } catch (QueryException) {
-            $this->assertSame(1, $service->rollbacks);
-        }
+            FileTransaction::run(function (FileTransaction $transaction) use (&$uploadedPath): void {
+                $file = (new FileService)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', $transaction);
+                $uploadedPath = $file->path;
 
-        try {
-            FileService::transactionWithFileRollback(
-                fn (): never => throw new Exception('failed'),
-                $service
-            );
+                throw new Exception('failed');
+            });
             $this->fail('Expected exception.');
         } catch (Exception $exception) {
             $this->assertSame('failed', $exception->getMessage());
-            $this->assertSame(2, $service->rollbacks);
         }
+
+        $this->assertFalse(Storage::disk('local')->exists($uploadedPath));
+        $this->assertDatabaseCount(config('laravel-files.table'), 0);
+        $this->assertRollbackTempEmpty();
+    }
+
+    #[Test]
+    public function transaction_removes_partially_uploaded_batch_when_later_file_fails(): void
+    {
+        try {
+            FileTransaction::run(fn (FileTransaction $transaction): array => (new FileService)->create([
+                $this->temporaryFile('%PDF-1.4', 'pdf'),
+                'missing-file.pdf',
+            ], 'Invoices', $transaction));
+            $this->fail('Expected exception.');
+        } catch (UserFriendlyException $exception) {
+            $this->assertStringContainsString('could not be read', $exception->getMessage());
+        }
+
+        $this->assertSame([], Storage::disk('local')->allFiles('document/invoices'));
+        $this->assertDatabaseCount(config('laravel-files.table'), 0);
+        $this->assertRollbackTempEmpty();
+    }
+
+    #[Test]
+    public function destroy_deletes_source_file_cache_directory_and_model(): void
+    {
+        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
+        Storage::disk('public')->put('cache/image/'.$file->getKey().'/thumb.jpg', 'cache');
+
+        FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
+            (new FileService)->destroy($file, $transaction);
+        });
+
+        $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
+        $this->assertFalse(Storage::disk('public')->exists('cache/image/'.$file->getKey().'/thumb.jpg'));
+        $this->assertDatabaseMissing(config('laravel-files.table'), [
+            'id' => $file->getKey(),
+        ]);
+        $this->assertRollbackTempEmpty();
+    }
+
+    #[Test]
+    public function destroy_restores_source_file_when_callback_throws(): void
+    {
+        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
+
+        try {
+            FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
+                (new FileService)->destroy($file, $transaction);
+
+                throw new Exception('failed');
+            });
+            $this->fail('Expected exception.');
+        } catch (Exception $exception) {
+            $this->assertSame('failed', $exception->getMessage());
+        }
+
+        $this->assertTrue(Storage::disk('local')->exists('document/invoices/file.pdf'));
+        $this->assertSame('contents', Storage::disk('local')->get('document/invoices/file.pdf'));
+        $this->assertDatabaseHas(config('laravel-files.table'), [
+            'id' => $file->getKey(),
+        ]);
+        $this->assertRollbackTempEmpty();
+    }
+
+    #[Test]
+    public function destroy_restores_source_file_when_cache_delete_fails(): void
+    {
+        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
+        config(['laravel-files.image_cache_disk' => 'missing']);
+        Log::shouldReceive('error')->once();
+
+        try {
+            FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
+                (new FileService)->destroy($file, $transaction);
+            });
+            $this->fail('Expected exception.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString('cache directory', $exception->getMessage());
+        }
+
+        $this->assertTrue(Storage::disk('local')->exists('document/invoices/file.pdf'));
+        $this->assertSame('contents', Storage::disk('local')->get('document/invoices/file.pdf'));
+        $this->assertDatabaseHas(config('laravel-files.table'), [
+            'id' => $file->getKey(),
+        ]);
+        $this->assertRollbackTempEmpty();
+    }
+
+    #[Test]
+    public function destroy_fails_when_source_file_is_missing(): void
+    {
+        $file = File::query()->create([
+            'path' => 'document/invoices/missing.pdf',
+            'extension' => FileExtension::Pdf,
+            'source' => FileSource::Manual,
+            'size' => 8,
+        ]);
+
+        Log::shouldReceive('error')->once();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('missing file');
+
+        FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
+            (new FileService)->destroy($file, $transaction);
+        });
     }
 
     #[Test]
@@ -325,8 +358,7 @@ final class FileServiceTest extends TestCase
     #[Test]
     public function private_extension_and_image_validation_errors_are_user_friendly(): void
     {
-        $pathExtension = new ReflectionMethod(FileService::class, 'getPathExtension');
-        $mimeExtension = new ReflectionMethod(FileService::class, 'getFileExtensionFromMime');
+        $fileExtension = new ReflectionMethod(FileService::class, 'getFileExtension');
         $imageDimensions = new ReflectionMethod(FileService::class, 'ensureImageUploadDimensions');
         $readFileContents = new ReflectionMethod(FileService::class, 'readFileContents');
 
@@ -338,17 +370,10 @@ final class FileServiceTest extends TestCase
         }
 
         try {
-            $pathExtension->invoke(null, 'file');
+            $fileExtension->invoke(null, 'file');
             $this->fail('Expected extension detection exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The file extension could not be detected.', $exception->getMessage());
-        }
-
-        try {
-            $mimeExtension->invoke(null, str_repeat(chr(0), 32));
-            $this->fail('Expected MIME exception.');
-        } catch (UserFriendlyException $exception) {
-            $this->assertStringContainsString('MIME type', $exception->getMessage());
         }
 
         try {
@@ -385,6 +410,23 @@ final class FileServiceTest extends TestCase
             ->andReturn(new FakeImage(100, 300, 'tall'));
 
         $this->assertSame('tall-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS)));
+    }
+
+    private function createStoredFile(string $path, string $contents): File
+    {
+        Storage::disk('local')->put($path, $contents);
+
+        return File::query()->create([
+            'path' => $path,
+            'extension' => FileExtension::Pdf,
+            'source' => FileSource::Manual,
+            'size' => strlen($contents),
+        ]);
+    }
+
+    private function assertRollbackTempEmpty(): void
+    {
+        $this->assertSame([], Storage::disk('local')->allFiles('.rollback-temp'));
     }
 
     private function temporaryFile(string $contents, string $extension): string

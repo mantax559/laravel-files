@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
-use Mantax559\LaravelFiles\Services\FileService;
 
 class File extends Model
 {
@@ -33,14 +32,5 @@ class File extends Model
         parent::__construct($attributes);
 
         $this->setTable(config('laravel-files.table'));
-    }
-
-    public function delete(): ?bool
-    {
-        $fileService = new FileService;
-
-        return $fileService->deleteModel($this, function (): ?bool {
-            return parent::delete();
-        });
     }
 }

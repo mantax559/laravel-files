@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
-use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,17 +27,35 @@ class FileService
 
     private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
 
-    private array $deletedSeederFolders = [];
-
-    private array $uploadedFiles = [];
-
-    private array $deletedFiles = [];
-
-    private bool $transactionActive = false;
-
     public function __construct(private FileSource $fileSource = FileSource::Manual) {}
 
-    public function save(string $file, string $folder): string
+    public function create(string|array $files, string $folder, FileTransaction $transaction): File|array
+    {
+        if (! is_array($files)) {
+            return $this->createFile($files, $folder, $transaction);
+        }
+
+        $models = [];
+
+        foreach ($files as $file) {
+            $models[] = $this->createFile($file, $folder, $transaction);
+        }
+
+        return $models;
+    }
+
+    public function destroy(File|array $files, FileTransaction $transaction): void
+    {
+        foreach (is_array($files) ? $files : [$files] as $file) {
+            $this->deleteFiles($file, $transaction);
+
+            if (! $file->delete()) {
+                throw new RuntimeException(__('The file model could not be deleted.'));
+            }
+        }
+    }
+
+    private function save(string $file, string $folder, FileTransaction $transaction): array
     {
         if (! is_file($file) && ! is_url($file)) {
             throw new UserFriendlyException(__('The file could not be read. Provide a valid local path or URL.'));
@@ -62,7 +78,7 @@ class FileService
             'The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.'
         );
 
-        $this->deleteSeederFolder($fileExtension, $folder);
+        $this->deleteSeederFolder($fileExtension, $folder, $transaction);
 
         $filePath = self::path(
             $this->getStorageFolderPath($fileExtension, $folder),
@@ -73,67 +89,14 @@ class FileService
             throw new UserFriendlyException(__('The file could not be stored. Please try again.'));
         }
 
-        if ($this->transactionActive) {
-            $this->uploadedFiles[] = $filePath;
-        }
+        $transaction->addUploaded($filePath);
 
-        return $filePath;
-    }
-
-    public function deleteModel(File $file, callable $deleteModel): ?bool
-    {
-        return $this->transactionWithFileRollback(function () use ($file, $deleteModel): ?bool {
-            if (! $this->deleteModelFiles($file)) {
-                return false;
-            }
-
-            return $deleteModel();
-        });
-    }
-
-    public function transactionWithFileRollback(callable $callback): mixed
-    {
-        if ($this->transactionActive) {
-            return $callback();
-        }
-
-        $this->transactionActive = true;
-        DB::beginTransaction();
-
-        try {
-            $result = $callback();
-
-            if (is_bool($result) && ! $result) {
-                DB::rollBack();
-                $this->rollbackFiles();
-                $this->transactionActive = false;
-
-                return false;
-            }
-
-            DB::commit();
-            $this->clearFileChanges();
-            $this->transactionActive = false;
-
-            return $result;
-        } catch (QueryException $exception) {
-            DB::rollBack();
-            $this->rollbackFiles();
-            $this->transactionActive = false;
-
-            throw new QueryException(
-                $exception->getConnectionName(),
-                $exception->getSql(),
-                $exception->getBindings(),
-                $exception->getPrevious()
-            );
-        } catch (Throwable $exception) {
-            DB::rollBack();
-            $this->rollbackFiles();
-            $this->transactionActive = false;
-
-            throw $exception;
-        }
+        return [
+            'path' => $filePath,
+            'extension' => $fileExtension,
+            'source' => $this->fileSource,
+            'size' => strlen($fileContents),
+        ];
     }
 
     public static function cacheImage(
@@ -195,7 +158,12 @@ class FileService
         return response()->download(Storage::disk(config('laravel-files.disk'))->path($filePath));
     }
 
-    private function deleteModelFiles(File $file): bool
+    private function createFile(string $file, string $folder, FileTransaction $transaction): File
+    {
+        return File::create($this->save($file, $folder, $transaction));
+    }
+
+    private function deleteFiles(File $file, FileTransaction $transaction): void
     {
         if (! Storage::disk(config('laravel-files.disk'))->exists($file->path)) {
             Log::error('File model references missing file.', [
@@ -204,62 +172,24 @@ class FileService
                 'file_id' => $file->getKey(),
             ]);
 
-            return false;
+            throw new RuntimeException(__('The file model references a missing file.'));
         }
 
-        $fileBackup = base64_encode(Storage::disk(config('laravel-files.disk'))->get($file->path));
+        $transaction->addDeleted($file->path);
 
-        if (! self::deleteFile(config('laravel-files.disk'), $file->path)) {
-            return false;
+        if (! self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
+            throw new RuntimeException(__('The file cache directory could not be deleted.'));
         }
-
-        $this->deletedFiles[] = [
-            'file_path' => $file->path,
-            'file' => $fileBackup,
-        ];
-
-        if (self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
-            return true;
-        }
-
-        return false;
     }
 
-    private function rollbackFiles(): void
-    {
-        foreach ($this->uploadedFiles as $uploadedFile) {
-            self::deleteFile(config('laravel-files.disk'), $uploadedFile);
-        }
-
-        foreach ($this->deletedFiles as $deletedFile) {
-            self::saveFile(config('laravel-files.disk'), $deletedFile['file_path'], base64_decode($deletedFile['file']));
-        }
-
-        $this->clearFileChanges();
-    }
-
-    private function clearFileChanges(): void
-    {
-        $this->uploadedFiles = [];
-        $this->deletedFiles = [];
-    }
-
-    private function deleteSeederFolder(FileExtension $fileExtension, string $folder): void
+    private function deleteSeederFolder(FileExtension $fileExtension, string $folder, FileTransaction $transaction): void
     {
         if (! cmprenum($this->fileSource, FileSource::Seeder)) {
             return;
         }
 
         $folderPath = $this->getStorageFolderPath($fileExtension, $folder);
-
-        foreach ($this->deletedSeederFolders as $deletedSeederFolder) {
-            if (cmprstr($deletedSeederFolder, $folderPath)) {
-                return;
-            }
-        }
-
-        self::deleteDirectory(config('laravel-files.disk'), $folderPath);
-        $this->deletedSeederFolders[] = $folderPath;
+        $transaction->addDeletedDirectory($folderPath);
     }
 
     private function getStorageFolderPath(FileExtension $fileExtension, string $folder): string
@@ -321,30 +251,6 @@ class FileService
         return $saved;
     }
 
-    private static function deleteFile(string $disk, string $filePath): bool
-    {
-        try {
-            $deleted = self::disk($disk)->delete($filePath);
-        } catch (Throwable $exception) {
-            Log::error('File delete failed.', [
-                'disk' => $disk,
-                'path' => $filePath,
-                'exception' => $exception,
-            ]);
-
-            return false;
-        }
-
-        if (! $deleted) {
-            Log::error('File delete failed.', [
-                'disk' => $disk,
-                'path' => $filePath,
-            ]);
-        }
-
-        return $deleted;
-    }
-
     private static function deleteDirectory(string $disk, string $folderPath): bool
     {
         try {
@@ -399,8 +305,9 @@ class FileService
 
     private static function getFileExtension(string $path): FileExtension
     {
-        $path = parse_url($path, PHP_URL_PATH) ?: $path;
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $urlPath = parse_url($path, PHP_URL_PATH);
+        $extensionPath = is_string($urlPath) ? $urlPath : $path;
+        $extension = pathinfo($extensionPath, PATHINFO_EXTENSION);
 
         if (! empty($extension)) {
             return self::parseFileExtension($extension);
@@ -465,7 +372,11 @@ class FileService
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
     {
         foreach ($extensions as $extension) {
-            if (cmprenum($extension, $fileExtension)) {
+            if ($extension instanceof FileExtension && cmprenum($extension, $fileExtension)) {
+                return true;
+            }
+
+            if (is_string($extension) && cmprstr($extension, $fileExtension->value)) {
                 return true;
             }
         }
@@ -534,7 +445,9 @@ class FileService
         $values = [];
 
         foreach ($extensions as $extension) {
-            $values[] = $extension->value;
+            $values[] = $extension instanceof FileExtension
+                ? $extension->value
+                : $extension;
         }
 
         return implode(', ', $values);

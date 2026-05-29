@@ -68,11 +68,16 @@ FileValidationHelper::getImageRules(required: false, maxWidth: 2048, maxHeight: 
 
 ```php
 use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 
-$path = (new FileService)->save($request->file('file')->path(), 'products');
+$file = FileTransaction::run(fn (FileTransaction $transaction) => (new FileService)->create(
+    $request->file('file')->path(),
+    'products',
+    $transaction
+));
 ```
 
-The returned `$path` is relative to `config('laravel-files.disk')`.
+The returned `File` model stores a path relative to `config('laravel-files.disk')`.
 
 Folder structure is derived from the detected `FileExtension`:
 
@@ -88,57 +93,56 @@ When the source is configured as `FileSource::Seeder`, paths are prefixed with `
 ```php
 use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 
-$path = (new FileService(FileSource::Seeder))->save($filePath, 'products');
+$file = FileTransaction::run(fn (FileTransaction $transaction) => (new FileService(FileSource::Seeder))->create(
+    $filePath,
+    'products',
+    $transaction
+));
 ```
 
-Seeder storage removes the target folder before the first write for that folder during the service instance lifetime.
+Seeder storage removes the target folder before the first write for that folder during the transaction.
 
 ## Cache Images
 
 ```php
 use Mantax559\LaravelFiles\Services\FileService;
 
-$url = (new FileService)->cacheImage(
+$url = FileService::cacheImage(
     sourcePath: 'image/products/source.avif',
     width: 300,
     height: 300,
-    folder: 'products',
+    folderSource: 'products',
 );
 ```
 
 Cached images are stored on `config('laravel-files.image_cache_disk')` under `cache/image/{folder}` and the method returns the public disk URL.
 
-Multiple cache sizes:
-
-```php
-use Mantax559\LaravelFiles\Services\FileService;
-
-$urls = (new FileService)->cacheImages('image/products/source.avif', [
-    ['width' => 300, 'height' => 300],
-    ['width' => 600, 'height' => 600],
-], 'products');
-```
-
 ## Rollback Files
 
-Use `transactionWithFileRollback()` when database writes and file writes must succeed together:
+Use `FileTransaction::run()` when database writes and file writes must succeed together:
 
 ```php
 use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 
 $fileService = new FileService;
 
-FileService::transactionWithFileRollback(function () use ($fileService, $request): void {
-    $path = $fileService->save($request->file('file')->path(), 'products');
+FileTransaction::run(function (FileTransaction $transaction) use ($fileService, $request): void {
+    $file = $fileService->create(
+        $request->file('file')->path(),
+        'products',
+        $transaction
+    );
 
     Product::query()->create([
-        'file_path' => $path,
+        'file_id' => $file->getKey(),
     ]);
-}, $fileService);
+});
 ```
 
-If the callback throws, uploaded files are deleted and deleted files tracked by the service are restored.
+If the callback throws, uploaded files are deleted and deleted files are restored from the temporary rollback folder.
 
 ## File Model
 
@@ -164,7 +168,6 @@ use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Enums\FileSource;
 
 FileExtension::Jpg->folder();
-FileExtension::getByMimeType('image/jpeg');
 FileExtension::getArrayForSelect();
 
 FileSource::Manual;
