@@ -14,6 +14,7 @@ use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use Mantax559\LaravelObservability\Models\Log;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 use ValueError;
 
 class FileManager
@@ -23,6 +24,8 @@ class FileManager
     private const string FOLDER_SEEDER = 'seeder';
 
     private const string CACHE_AUTO_DIMENSION = 'auto';
+
+    private const string DEFAULT_CACHE_IMAGE_PATH = 'vendor/laravel-files/image/default-cache-image.svg';
 
     private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
 
@@ -107,7 +110,12 @@ class FileManager
         string|int|array|null $folderSource = null
     ): string {
         if (! FileStorage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
-            throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
+            Log::error('Image cache source file is missing.', [
+                'disk' => config('laravel-files.disk'),
+                'path' => $sourcePath,
+            ]);
+
+            return self::defaultCacheImageUrl();
         }
 
         $sourceInfo = pathinfo($sourcePath);
@@ -119,20 +127,20 @@ class FileManager
             return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
         }
 
-        $image = Image::decodePath(FileStorage::disk(config('laravel-files.disk'))->path($sourcePath));
+        try {
+            $image = Image::decodePath(FileStorage::disk(config('laravel-files.disk'))->path($sourcePath));
 
-        if (empty($width) && empty($height)) {
-            $width = $image->width();
-            $height = $image->height();
-        } elseif (empty($width)) {
-            $image = $image->scale(height: $height);
-            $width = $image->width();
-        } elseif (empty($height)) {
-            $image = $image->scale(width: $width);
-            $height = $image->height();
-        }
+            if (empty($width) && empty($height)) {
+                $width = $image->width();
+                $height = $image->height();
+            } elseif (empty($width)) {
+                $image = $image->scale(height: $height);
+                $width = $image->width();
+            } elseif (empty($height)) {
+                $image = $image->scale(width: $width);
+                $height = $image->height();
+            }
 
-        if (! FileStorage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
             if ($coverImage) {
                 $image = $image->cover($width, $height);
             }
@@ -144,10 +152,20 @@ class FileManager
             );
 
             if (! empty($errorCode)) {
-                throw new RuntimeException(__('The image cache could not be stored. Please contact support with the following code: :error_code', [
-                    'error_code' => $errorCode,
-                ]));
+                return self::defaultCacheImageUrl();
             }
+        } catch (Throwable $exception) {
+            Log::error('Image cache generation failed.', [
+                'disk' => config('laravel-files.disk'),
+                'image_cache_disk' => config('laravel-files.image_cache_disk'),
+                'source_path' => $sourcePath,
+                'cache_path' => $cachePath,
+                'exception' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+
+            return self::defaultCacheImageUrl();
         }
 
         return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
@@ -230,6 +248,11 @@ class FileManager
             self::getCacheImageFolder($folderSource),
             slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::STORED_IMAGE_EXTENSION->value
         );
+    }
+
+    private static function defaultCacheImageUrl(): string
+    {
+        return asset(self::DEFAULT_CACHE_IMAGE_PATH);
     }
 
     private static function readFileContents(string $file): string

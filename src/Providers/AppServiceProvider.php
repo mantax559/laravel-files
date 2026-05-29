@@ -11,6 +11,8 @@ final class AppServiceProvider extends ServiceProvider
 {
     private const string PATH_CONFIG = __DIR__.'/../../config/laravel-files.php';
 
+    private const string PATH_IMAGES = __DIR__.'/../../resources/assets/image';
+
     private const string PATH_MIGRATIONS = __DIR__.'/../../database/migrations';
 
     private const string PATH_LANG = __DIR__.'/../../resources/lang';
@@ -20,6 +22,10 @@ final class AppServiceProvider extends ServiceProvider
         $this->publishes([
             self::PATH_CONFIG => config_path('laravel-files.php'),
         ], 'config');
+
+        $this->publishes([
+            self::PATH_IMAGES => public_path('vendor/laravel-files/image'),
+        ], 'laravel-assets');
 
         $this->loadMigrationsFrom(self::PATH_MIGRATIONS);
         $this->loadJsonTranslationsFrom(self::PATH_LANG);
