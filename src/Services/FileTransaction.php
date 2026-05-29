@@ -58,7 +58,7 @@ final class FileTransaction
     {
         $tempPath = $this->tempPath($path);
 
-        if (! FileStorage::disk()->move($path, $tempPath)) {
+        if (! FileStorage::disk(config('laravel-files.disk'))->move($path, $tempPath)) {
             throw new RuntimeException(__('The file could not be moved to rollback storage.'));
         }
 
@@ -76,7 +76,7 @@ final class FileTransaction
             }
         }
 
-        foreach (FileStorage::disk()->allFiles($path) as $filePath) {
+        foreach (FileStorage::disk(config('laravel-files.disk'))->allFiles($path) as $filePath) {
             $this->addDeleted($filePath);
         }
 
@@ -101,11 +101,11 @@ final class FileTransaction
         }
 
         foreach ($this->deleted as $file) {
-            if (FileStorage::disk()->exists($file['path'])) {
+            if (FileStorage::disk(config('laravel-files.disk'))->exists($file['path'])) {
                 self::deleteFile($file['path']);
             }
 
-            if (! FileStorage::disk()->move($file['temp_path'], $file['path'])) {
+            if (! FileStorage::disk(config('laravel-files.disk'))->move($file['temp_path'], $file['path'])) {
                 throw new RuntimeException(__('The file could not be restored from rollback storage.'));
             }
         }

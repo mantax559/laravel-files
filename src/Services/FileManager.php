@@ -103,7 +103,7 @@ class FileManager
         ?int $height = null,
         string|int|array|null $folderSource = null
     ): string {
-        if (! FileStorage::disk()->exists($sourcePath)) {
+        if (! FileStorage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
             throw new RuntimeException(__('File does not exist: :path', ['path' => $sourcePath]));
         }
 
@@ -116,7 +116,7 @@ class FileManager
             return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
         }
 
-        $image = Image::decodePath(FileStorage::disk()->path($sourcePath));
+        $image = Image::decodePath(FileStorage::disk(config('laravel-files.disk'))->path($sourcePath));
 
         if (empty($width) && empty($height)) {
             $width = $image->width();
@@ -148,12 +148,12 @@ class FileManager
 
     public static function open(string $filePath, string $headerContentType): BinaryFileResponse
     {
-        return response()->file(FileStorage::disk()->path($filePath), ['Content-Type' => $headerContentType]);
+        return response()->file(FileStorage::disk(config('laravel-files.disk'))->path($filePath), ['Content-Type' => $headerContentType]);
     }
 
     public static function download(string $filePath): BinaryFileResponse
     {
-        return response()->download(FileStorage::disk()->path($filePath));
+        return response()->download(FileStorage::disk(config('laravel-files.disk'))->path($filePath));
     }
 
     private function createFile(string $file, string $folder, FileTransaction $transaction): File
@@ -163,7 +163,7 @@ class FileManager
 
     private function deleteFiles(File $file, FileTransaction $transaction): void
     {
-        if (! FileStorage::disk()->exists($file->path)) {
+        if (! FileStorage::disk(config('laravel-files.disk'))->exists($file->path)) {
             Log::error('File model references missing file.', [
                 'disk' => config('laravel-files.disk'),
                 'path' => $file->path,

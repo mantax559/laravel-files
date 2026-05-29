@@ -11,9 +11,9 @@ use Throwable;
 
 final class FileStorage
 {
-    public static function disk(?string $disk = null): FilesystemAdapter
+    public static function disk(string $disk): FilesystemAdapter
     {
-        return Storage::disk($disk ?? config('laravel-files.disk'));
+        return Storage::disk($disk);
     }
 
     public static function path(string ...$parts): string
