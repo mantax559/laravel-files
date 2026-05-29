@@ -6,7 +6,6 @@ namespace Mantax559\LaravelFiles\Tests\Integration;
 
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
@@ -118,9 +117,9 @@ final class FileManagerTest extends TestCase
     }
 
     #[Test]
-    public function create_accepts_string_extensions_from_config(): void
+    public function create_accepts_configured_extensions(): void
     {
-        config(['laravel-files.accept_extensions' => ['pdf']]);
+        config(['laravel-files.accept_extensions' => [FileExtension::Pdf]]);
 
         $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
             $this->temporaryFile('%PDF-1.4', 'pdf'),
@@ -132,6 +131,19 @@ final class FileManagerTest extends TestCase
     }
 
     #[Test]
+    public function create_returns_multiple_files_for_successful_batches(): void
+    {
+        $files = FileTransaction::run(fn (FileTransaction $transaction): array => (new FileManager)->create([
+            $this->temporaryFile('%PDF-1.4', 'pdf'),
+            $this->temporaryFile('text', 'txt'),
+        ], 'Invoices', $transaction));
+
+        $this->assertCount(2, $files);
+        $this->assertStringEndsWith('.pdf', $files[0]->path);
+        $this->assertStringEndsWith('.txt', $files[1]->path);
+    }
+
+    #[Test]
     public function create_reports_storage_and_upload_size_limits(): void
     {
         config(['laravel-files.max_upload_file_size_bytes' => 4]);
@@ -140,7 +152,7 @@ final class FileManagerTest extends TestCase
             (new FileManager)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
             $this->fail('Expected upload size exception.');
         } catch (UserFriendlyException $exception) {
-            $this->assertStringContainsString('uploaded file is too large', $exception->getMessage());
+            $this->assertStringContainsString('The file is too large', $exception->getMessage());
         }
 
         config([
@@ -149,7 +161,7 @@ final class FileManagerTest extends TestCase
         ]);
 
         $this->expectException(UserFriendlyException::class);
-        $this->expectExceptionMessage('stored file is too large');
+        $this->expectExceptionMessage('The file is too large');
 
         (new FileManager)->create($this->temporaryFile('12345', 'pdf'), 'Invoices', new FileTransaction);
     }
@@ -158,8 +170,6 @@ final class FileManagerTest extends TestCase
     public function storage_write_failures_are_logged_and_reported(): void
     {
         config(['laravel-files.disk' => 'missing']);
-
-        Log::shouldReceive('error')->once();
 
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('The file could not be stored');
@@ -200,12 +210,55 @@ final class FileManagerTest extends TestCase
     }
 
     #[Test]
+    public function cache_image_uses_original_dimensions_when_none_are_given(): void
+    {
+        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        $this->mockImageFacade()
+            ->shouldReceive('decodePath')
+            ->once()
+            ->andReturn(new FakeImage(640, 480, 'cached'));
+
+        FileManager::cacheImage('image/products/source.jpg', null, null, 'Products');
+
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autoxauto.avif'));
+    }
+
+    #[Test]
+    public function cache_image_scales_width_when_only_width_is_given(): void
+    {
+        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        $this->mockImageFacade()
+            ->shouldReceive('decodePath')
+            ->once()
+            ->andReturn(new FakeImage(encodedContents: 'cached'));
+
+        FileManager::cacheImage('image/products/source.jpg', 20, null, 'Products');
+
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-20xauto.avif'));
+    }
+
+    #[Test]
+    public function cache_image_returns_default_image_when_generation_throws(): void
+    {
+        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        $this->mockImageFacade()
+            ->shouldReceive('decodePath')
+            ->once()
+            ->andThrow(new RuntimeException('decode failed'));
+
+        $this->assertSame(
+            asset(config('laravel-files.default_image_cache_url')),
+            FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products')
+        );
+    }
+
+    #[Test]
     public function cache_image_fails_when_source_does_not_exist(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('File does not exist');
-
-        FileManager::cacheImage('missing.jpg', 10, 20);
+        $this->assertSame(
+            asset(config('laravel-files.default_image_cache_url')),
+            FileManager::cacheImage('missing.jpg', 10, 20)
+        );
     }
 
     #[Test]
@@ -295,7 +348,6 @@ final class FileManagerTest extends TestCase
     {
         $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
         config(['laravel-files.image_cache_disk' => 'missing']);
-        Log::shouldReceive('error')->once();
 
         try {
             FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
@@ -323,10 +375,22 @@ final class FileManagerTest extends TestCase
             'size' => 8,
         ]);
 
-        Log::shouldReceive('error')->once();
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('missing file');
+
+        FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
+            (new FileManager)->destroy($file, $transaction);
+        });
+    }
+
+    #[Test]
+    public function destroy_throws_when_file_model_cannot_be_deleted(): void
+    {
+        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
+        File::deleting(static fn (): bool => false);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('file model');
 
         FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
             (new FileManager)->destroy($file, $transaction);
@@ -346,7 +410,7 @@ final class FileManagerTest extends TestCase
     public function private_extension_and_image_validation_errors_are_user_friendly(): void
     {
         $fileExtension = new ReflectionMethod(FileManager::class, 'getFileExtension');
-        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureImageDimensions');
+        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureUploadImageDimensions');
         $readFileContents = new ReflectionMethod(FileManager::class, 'readFileContents');
 
         try {
@@ -357,6 +421,13 @@ final class FileManagerTest extends TestCase
         }
 
         try {
+            $fileExtension->invoke(null, $this->temporaryFile('test', 'exe'));
+            $this->fail('Expected unsupported extension exception.');
+        } catch (UserFriendlyException $exception) {
+            $this->assertStringContainsString('not supported', $exception->getMessage());
+        }
+
+        try {
             $fileExtension->invoke(null, 'file');
             $this->fail('Expected extension detection exception.');
         } catch (UserFriendlyException $exception) {
@@ -364,7 +435,7 @@ final class FileManagerTest extends TestCase
         }
 
         try {
-            $imageDimensions->invoke(null, 'not-image', config('laravel-files.max_upload_image_side_pixels'), 'invalid');
+            $imageDimensions->invoke(null, 'not-image');
             $this->fail('Expected image exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The uploaded file is not a valid image.', $exception->getMessage());
@@ -377,10 +448,19 @@ final class FileManagerTest extends TestCase
 
         $imageDimensions->invoke(
             null,
-            base64_decode(self::PNG_CONTENTS),
-            config('laravel-files.max_upload_image_side_pixels'),
-            'The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.'
+            base64_decode(self::PNG_CONTENTS)
         );
+    }
+
+    #[Test]
+    public function private_accepted_extensions_text_fails_when_uploads_are_not_configured(): void
+    {
+        config(['laravel-files.accept_extensions' => []]);
+
+        $this->expectException(UserFriendlyException::class);
+        $this->expectExceptionMessage('File uploads are not configured');
+
+        (new FileManager)->create($this->temporaryFile('%PDF-1.4', 'pdf'), 'Invoices', new FileTransaction);
     }
 
     #[Test]

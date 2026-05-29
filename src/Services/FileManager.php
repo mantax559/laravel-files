@@ -280,11 +280,7 @@ class FileManager
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
     {
         foreach ($extensions as $extension) {
-            if ($extension instanceof FileExtension && cmprenum($extension, $fileExtension)) {
-                return true;
-            }
-
-            if (is_string($extension) && cmprstr($extension, $fileExtension->value)) {
+            if (cmprenum($extension, $fileExtension)) {
                 return true;
             }
         }
@@ -350,9 +346,7 @@ class FileManager
         $values = [];
 
         foreach ($extensions as $extension) {
-            $values[] = $extension instanceof FileExtension
-                ? $extension->value
-                : $extension;
+            $values[] = $extension->value;
         }
 
         if (empty($values)) {
