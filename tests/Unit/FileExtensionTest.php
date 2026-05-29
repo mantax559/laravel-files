@@ -80,6 +80,20 @@ final class FileExtensionTest extends TestCase
     }
 
     #[Test]
+    public function extensions_can_be_filtered_by_storage_folder(): void
+    {
+        $extensions = [
+            FileExtension::Csv,
+            FileExtension::Jpg,
+            'png',
+            'missing',
+        ];
+
+        $this->assertSame([FileExtension::Jpg, 'png'], FileExtension::filterByFolder($extensions, FileExtension::FOLDER_IMAGE));
+        $this->assertSame($extensions, FileExtension::filterByFolder($extensions));
+    }
+
+    #[Test]
     public function enum_trait_helpers_work(): void
     {
         $this->assertArrayHasKey('jpg', FileExtension::getArray());

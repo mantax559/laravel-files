@@ -37,12 +37,18 @@ final class FileServiceTest extends TestCase
         Storage::fake('local');
         Storage::fake('public');
         config([
-            'laravel-files.accept_archive_extensions' => [FileExtension::Zip],
-            'laravel-files.accept_audio_extensions' => [FileExtension::Mp3],
-            'laravel-files.accept_document_extensions' => [FileExtension::Pdf, FileExtension::Txt],
-            'laravel-files.accept_image_extensions' => [FileExtension::Avif, FileExtension::Jpg, FileExtension::Png, FileExtension::Webp],
-            'laravel-files.accept_video_extensions' => [FileExtension::Mp4],
-            'laravel-files.accept_file_extensions' => [FileExtension::Json],
+            'laravel-files.accept_extensions' => [
+                FileExtension::Avif,
+                FileExtension::Jpg,
+                FileExtension::Json,
+                FileExtension::Mp3,
+                FileExtension::Mp4,
+                FileExtension::Pdf,
+                FileExtension::Png,
+                FileExtension::Txt,
+                FileExtension::Webp,
+                FileExtension::Zip,
+            ],
             'laravel-files.disk' => 'local',
             'laravel-files.image_cache_disk' => 'public',
             'laravel-files.image_cache_quality' => 90,
@@ -103,9 +109,9 @@ final class FileServiceTest extends TestCase
     }
 
     #[Test]
-    public function create_rejects_extensions_that_are_not_configured_for_their_folder(): void
+    public function create_rejects_extensions_that_are_not_configured_as_accepted(): void
     {
-        config(['laravel-files.accept_document_extensions' => [FileExtension::Txt]]);
+        config(['laravel-files.accept_extensions' => [FileExtension::Txt]]);
 
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('pdf file format is not allowed');
@@ -116,7 +122,7 @@ final class FileServiceTest extends TestCase
     #[Test]
     public function create_accepts_string_extensions_from_config(): void
     {
-        config(['laravel-files.accept_document_extensions' => ['pdf']]);
+        config(['laravel-files.accept_extensions' => ['pdf']]);
 
         $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileService)->create(
             $this->temporaryFile('%PDF-1.4', 'pdf'),

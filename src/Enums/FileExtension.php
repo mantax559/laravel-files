@@ -119,4 +119,32 @@ enum FileExtension: string
             default => false,
         };
     }
+
+    public static function filterByFolder(array $extensions, ?string $folder = null): array
+    {
+        if (! is_string($folder)) {
+            return $extensions;
+        }
+
+        $filteredExtensions = [];
+
+        foreach ($extensions as $extension) {
+            $fileExtension = self::resolve($extension);
+
+            if ($fileExtension instanceof self && cmprstr($fileExtension->folder(), $folder)) {
+                $filteredExtensions[] = $extension;
+            }
+        }
+
+        return $filteredExtensions;
+    }
+
+    public static function resolve(self|string $extension): ?self
+    {
+        if ($extension instanceof self) {
+            return $extension;
+        }
+
+        return self::tryFrom(strtolower($extension));
+    }
 }

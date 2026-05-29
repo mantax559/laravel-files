@@ -351,22 +351,7 @@ class FileService
 
     private static function acceptedExtensions(?FileExtension $fileExtension = null): array
     {
-        return match ($fileExtension?->folder()) {
-            FileExtension::FOLDER_ARCHIVE => config('laravel-files.accept_archive_extensions'),
-            FileExtension::FOLDER_AUDIO => config('laravel-files.accept_audio_extensions'),
-            FileExtension::FOLDER_DOCUMENT => config('laravel-files.accept_document_extensions'),
-            FileExtension::FOLDER_IMAGE => config('laravel-files.accept_image_extensions'),
-            FileExtension::FOLDER_VIDEO => config('laravel-files.accept_video_extensions'),
-            FileExtension::FOLDER_FILE => config('laravel-files.accept_file_extensions'),
-            default => [
-                ...config('laravel-files.accept_archive_extensions'),
-                ...config('laravel-files.accept_audio_extensions'),
-                ...config('laravel-files.accept_document_extensions'),
-                ...config('laravel-files.accept_image_extensions'),
-                ...config('laravel-files.accept_video_extensions'),
-                ...config('laravel-files.accept_file_extensions'),
-            ],
-        };
+        return FileExtension::filterByFolder(config('laravel-files.accept_extensions'), $fileExtension?->folder());
     }
 
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
