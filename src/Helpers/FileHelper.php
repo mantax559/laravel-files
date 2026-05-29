@@ -55,7 +55,11 @@ final class FileHelper
             empty(config('laravel-files.image_cache_sizes')[$size]['width'])
             && empty(config('laravel-files.image_cache_sizes')[$size]['height'])
         ) {
-            self::logInvalidImageCacheSize($sourcePath, $size);
+            Log::error('Invalid image cache size configuration.', [
+                'source_path' => $sourcePath,
+                'size' => $size,
+                'image_cache_sizes' => config('laravel-files.image_cache_sizes'),
+            ]);
 
             return [null, null];
         }
@@ -64,15 +68,6 @@ final class FileHelper
             config('laravel-files.image_cache_sizes')[$size]['width'] ?? null,
             config('laravel-files.image_cache_sizes')[$size]['height'] ?? null,
         ];
-    }
-
-    private static function logInvalidImageCacheSize(string $sourcePath, string $size): void
-    {
-        Log::error('Invalid image cache size configuration.', [
-            'source_path' => $sourcePath,
-            'size' => $size,
-            'image_cache_sizes' => config('laravel-files.image_cache_sizes'),
-        ]);
     }
 
     private static function normalizeFolders(string|int|array|Model|null $folderSource): string|int|array|null

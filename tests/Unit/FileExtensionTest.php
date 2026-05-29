@@ -82,15 +82,14 @@ final class FileExtensionTest extends TestCase
     #[Test]
     public function extensions_can_be_filtered_by_storage_folder(): void
     {
-        $extensions = [
+        config(['laravel-files.accept_extensions' => [
             FileExtension::Csv,
             FileExtension::Jpg,
-            'png',
-            'missing',
-        ];
+            FileExtension::Png,
+        ]]);
 
-        $this->assertSame([FileExtension::Jpg, 'png'], FileExtension::filterByFolder($extensions, FileExtension::FOLDER_IMAGE));
-        $this->assertSame($extensions, FileExtension::filterByFolder($extensions));
+        $this->assertSame([FileExtension::Jpg, FileExtension::Png], FileExtension::acceptedExtensions(FileExtension::FOLDER_IMAGE));
+        $this->assertSame(config('laravel-files.accept_extensions'), FileExtension::acceptedExtensions());
     }
 
     #[Test]

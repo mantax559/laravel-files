@@ -120,15 +120,29 @@ return [
 
     'max_upload_image_side_pixels' => 8192,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Accepted Extensions
+    |--------------------------------------------------------------------------
+    |
+    | Uploaded files are accepted only when their detected extension exists in
+    | this list. Each extension resolves its own storage folder through the
+    | FileExtension enum, so categories do not need separate configuration.
+    |
+    */
+
     'accept_extensions' => [
         FileExtension::SevenZip,
+        FileExtension::Apng,
         FileExtension::Avi,
         FileExtension::Avif,
         FileExtension::Csv,
         FileExtension::Doc,
         FileExtension::Docx,
+        FileExtension::Flac,
         FileExtension::Gif,
         FileExtension::Gz,
+        FileExtension::Jfif,
         FileExtension::Jpeg,
         FileExtension::Jpg,
         FileExtension::Json,
@@ -137,7 +151,12 @@ return [
         FileExtension::Mov,
         FileExtension::Mp3,
         FileExtension::Mp4,
+        FileExtension::Ods,
+        FileExtension::Odt,
+        FileExtension::Ogg,
         FileExtension::Pdf,
+        FileExtension::Pjpeg,
+        FileExtension::Pjp,
         FileExtension::Png,
         FileExtension::Ppt,
         FileExtension::Pptx,

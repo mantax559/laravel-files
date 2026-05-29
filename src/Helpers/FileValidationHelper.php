@@ -22,7 +22,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAcceptedExtensions(FileExtension::FOLDER_ARCHIVE)),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_ARCHIVE)),
         );
     }
 
@@ -37,7 +37,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAcceptedExtensions(FileExtension::FOLDER_AUDIO)),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_AUDIO)),
         );
     }
 
@@ -52,7 +52,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAcceptedExtensions(FileExtension::FOLDER_DOCUMENT)),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_DOCUMENT)),
         );
     }
 
@@ -77,7 +77,7 @@ final class FileValidationHelper
                 ...self::getImageDimensionRules('width', $width, $minWidth, $maxWidth),
                 ...self::getImageDimensionRules('height', $height, $minHeight, $maxHeight),
             ]),
-            self::getMimesRule($mimes ?? self::getAcceptedExtensions(FileExtension::FOLDER_IMAGE)),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_IMAGE)),
         );
     }
 
@@ -92,7 +92,7 @@ final class FileValidationHelper
             ValidationHelper::getRequiredRules($required),
             'file',
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAcceptedExtensions(FileExtension::FOLDER_VIDEO)),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_VIDEO)),
         );
     }
 
@@ -129,7 +129,7 @@ final class FileValidationHelper
         if (! empty($maxFileSize)) {
             $fileSizes[] = "max:$maxFileSize";
         } else {
-            $fileSizes[] = 'max:'.ceil(config('laravel-files.max_upload_file_size_bytes') / self::BYTES_IN_KILOBYTE);
+            $fileSizes[] = 'max:'.floor(config('laravel-files.max_upload_file_size_bytes') / self::BYTES_IN_KILOBYTE);
         }
 
         return $fileSizes;
@@ -174,10 +174,5 @@ final class FileValidationHelper
         }
 
         return $mimeValues;
-    }
-
-    private static function getAcceptedExtensions(string $folder): array
-    {
-        return FileExtension::filterByFolder(config('laravel-files.accept_extensions'), $folder);
     }
 }

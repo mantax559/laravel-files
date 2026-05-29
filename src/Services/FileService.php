@@ -16,6 +16,7 @@ use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
+use ValueError;
 
 class FileService
 {
@@ -318,7 +319,7 @@ class FileService
 
     private static function ensureAcceptedFileExtension(FileExtension $fileExtension): void
     {
-        if (self::containsExtension(self::acceptedExtensions($fileExtension), $fileExtension)) {
+        if (self::containsExtension(FileExtension::acceptedExtensions($fileExtension->folder()), $fileExtension)) {
             return;
         }
 
@@ -334,9 +335,9 @@ class FileService
 
     private static function parseFileExtension(string $extension): FileExtension
     {
-        $fileExtension = FileExtension::tryFrom(strtolower($extension));
-
-        if (! $fileExtension instanceof FileExtension) {
+        try {
+            return FileExtension::getEnumByString($extension);
+        } catch (ValueError) {
             throw new UserFriendlyException(__(
                 'The :extension file extension is not supported. Accepted formats: :extensions.',
                 [
@@ -345,13 +346,6 @@ class FileService
                 ]
             ));
         }
-
-        return $fileExtension;
-    }
-
-    private static function acceptedExtensions(?FileExtension $fileExtension = null): array
-    {
-        return FileExtension::filterByFolder(config('laravel-files.accept_extensions'), $fileExtension?->folder());
     }
 
     private static function containsExtension(array $extensions, FileExtension $fileExtension): bool
@@ -425,7 +419,7 @@ class FileService
 
     private static function getAcceptedExtensionsText(?FileExtension $fileExtension = null): string
     {
-        $extensions = self::acceptedExtensions($fileExtension);
+        $extensions = FileExtension::acceptedExtensions($fileExtension?->folder());
 
         $values = [];
 

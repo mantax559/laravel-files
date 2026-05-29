@@ -112,39 +112,31 @@ enum FileExtension: string
     {
         return match ($this) {
             self::Avif,
+            self::Jfif,
             self::Jpeg,
             self::Jpg,
+            self::Pjp,
+            self::Pjpeg,
             self::Png,
             self::Webp => true,
             default => false,
         };
     }
 
-    public static function filterByFolder(array $extensions, ?string $folder = null): array
+    public static function acceptedExtensions(?string $folder = null): array
     {
         if (! is_string($folder)) {
-            return $extensions;
+            return config('laravel-files.accept_extensions');
         }
 
         $filteredExtensions = [];
 
-        foreach ($extensions as $extension) {
-            $fileExtension = self::resolve($extension);
-
-            if ($fileExtension instanceof self && cmprstr($fileExtension->folder(), $folder)) {
+        foreach (config('laravel-files.accept_extensions') as $extension) {
+            if (cmprstr($extension->folder(), $folder)) {
                 $filteredExtensions[] = $extension;
             }
         }
 
         return $filteredExtensions;
-    }
-
-    public static function resolve(self|string $extension): ?self
-    {
-        if ($extension instanceof self) {
-            return $extension;
-        }
-
-        return self::tryFrom(strtolower($extension));
     }
 }
