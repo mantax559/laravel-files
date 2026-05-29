@@ -44,13 +44,7 @@ class File extends Model
                 return false;
             }
 
-            $deleted = parent::delete();
-
-            if (! $deleted) {
-                $fileService->rollbackFiles();
-            }
-
-            return $deleted;
+            return parent::delete();
         }, $fileService);
     }
 }

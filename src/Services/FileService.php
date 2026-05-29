@@ -127,7 +127,7 @@ class FileService
         return self::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
     }
 
-    public function rollbackFiles(): int
+    private function rollbackFiles(): int
     {
         foreach ($this->tempFiles as $tempFile) {
             if ($tempFile['is_upload']) {
@@ -137,7 +137,10 @@ class FileService
             }
         }
 
-        return count($this->tempFiles);
+        $rollbackCount = count($this->tempFiles);
+        $this->tempFiles = [];
+
+        return $rollbackCount;
     }
 
     public function deleteModelFiles(File $file): bool
@@ -165,10 +168,6 @@ class FileService
             return false;
         }
 
-        if (empty($file->getKey())) {
-            return true;
-        }
-
         if (self::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
             return true;
         }
@@ -184,6 +183,14 @@ class FileService
 
         try {
             $result = $callback();
+
+            if (is_bool($result) && ! $result) {
+                DB::rollBack();
+                $service->rollbackFiles();
+
+                return false;
+            }
+
             DB::commit();
 
             return $result;
