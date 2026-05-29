@@ -34,6 +34,10 @@ You can optionally publish the config file with:
 
     php artisan vendor:publish --provider="Mantax559\LaravelFiles\Providers\AppServiceProvider" --tag=config
 
+Publish assets:
+
+    php artisan vendor:publish --provider="Mantax559\LaravelFiles\Providers\AppServiceProvider" --tag=laravel-assets
+
 ### Testing
 
 Run the test suite:

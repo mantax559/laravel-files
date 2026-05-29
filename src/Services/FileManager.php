@@ -118,7 +118,6 @@ class FileManager
 
         $sourceInfo = pathinfo($sourcePath);
         self::getFileExtension($sourcePath);
-        $coverImage = ! empty($width) && ! empty($height);
         $cachePath = self::getCacheImagePath($sourceInfo['filename'], $width, $height, $folderSource);
 
         if (FileStorage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
@@ -126,6 +125,7 @@ class FileManager
         }
 
         try {
+            $coverImage = ! empty($width) && ! empty($height);
             $image = Image::decodePath(FileStorage::disk(config('laravel-files.disk'))->path($sourcePath));
 
             if (empty($width) && empty($height)) {
