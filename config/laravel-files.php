@@ -59,6 +59,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Image Cache URL
+    |--------------------------------------------------------------------------
+    |
+    | This public URL is returned when an image cache variant cannot be generated.
+    | The published default asset can be replaced by the application.
+    |
+    */
+
+    'default_image_cache_url' => 'vendor/laravel-files/image/default-cache-image.svg',
+
+    /*
+    |--------------------------------------------------------------------------
     | Image Cache Sizes
     |--------------------------------------------------------------------------
     |

@@ -25,8 +25,6 @@ class FileManager
 
     private const string CACHE_AUTO_DIMENSION = 'auto';
 
-    private const string DEFAULT_CACHE_IMAGE_PATH = 'vendor/laravel-files/image/default-cache-image.svg';
-
     private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
 
     public function __construct(private FileSource $fileSource = FileSource::Manual) {}
@@ -34,13 +32,13 @@ class FileManager
     public function create(string|array $files, string $folder, FileTransaction $transaction): File|array
     {
         if (! is_array($files)) {
-            return $this->createFile($files, $folder, $transaction);
+            return File::create($this->save($files, $folder, $transaction));
         }
 
         $models = [];
 
         foreach ($files as $file) {
-            $models[] = $this->createFile($file, $folder, $transaction);
+            $models[] = File::create($this->save($file, $folder, $transaction));
         }
 
         return $models;
@@ -115,7 +113,7 @@ class FileManager
                 'path' => $sourcePath,
             ]);
 
-            return self::defaultCacheImageUrl();
+            return asset(config('laravel-files.default_image_cache_url'));
         }
 
         $sourceInfo = pathinfo($sourcePath);
@@ -152,7 +150,7 @@ class FileManager
             );
 
             if (! empty($errorCode)) {
-                return self::defaultCacheImageUrl();
+                return asset(config('laravel-files.default_image_cache_url'));
             }
         } catch (Throwable $exception) {
             Log::error('Image cache generation failed.', [
@@ -165,7 +163,7 @@ class FileManager
                 'trace' => $exception->getTraceAsString(),
             ]);
 
-            return self::defaultCacheImageUrl();
+            return asset(config('laravel-files.default_image_cache_url'));
         }
 
         return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
@@ -179,11 +177,6 @@ class FileManager
     public static function download(string $filePath): BinaryFileResponse
     {
         return response()->download(FileStorage::disk(config('laravel-files.disk'))->path($filePath));
-    }
-
-    private function createFile(string $file, string $folder, FileTransaction $transaction): File
-    {
-        return File::create($this->save($file, $folder, $transaction));
     }
 
     private function deleteFiles(File $file, FileTransaction $transaction): void
@@ -248,11 +241,6 @@ class FileManager
             self::getCacheImageFolder($folderSource),
             slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::STORED_IMAGE_EXTENSION->value
         );
-    }
-
-    private static function defaultCacheImageUrl(): string
-    {
-        return asset(self::DEFAULT_CACHE_IMAGE_PATH);
     }
 
     private static function readFileContents(string $file): string
