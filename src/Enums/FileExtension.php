@@ -5,23 +5,24 @@ declare(strict_types=1);
 namespace Mantax559\LaravelFiles\Enums;
 
 use Mantax559\LaravelHelpers\Traits\EnumTrait;
-use ValueError;
 
 enum FileExtension: string
 {
     use EnumTrait;
 
-    public const FOLDER_ARCHIVE = 'archive';
+    public const string FOLDER_ARCHIVE = 'archive';
 
-    public const FOLDER_AUDIO = 'audio';
+    public const string FOLDER_AUDIO = 'audio';
 
-    public const FOLDER_DOCUMENT = 'document';
+    public const string FOLDER_DOCUMENT = 'document';
 
-    public const FOLDER_IMAGE = 'image';
+    public const string FOLDER_IMAGE = 'image';
 
-    public const FOLDER_VIDEO = 'video';
+    public const string FOLDER_VIDEO = 'video';
 
-    public const FOLDER_FILE = 'file';
+    public const string FOLDER_FILE = 'file';
+
+    public const self STORED_IMAGE_EXTENSION = self::Avif;
 
     case SevenZip = '7z';
     case Apng = 'apng';
@@ -64,31 +65,19 @@ enum FileExtension: string
     case Xml = 'xml';
     case Zip = 'zip';
 
-    public static function archiveExtensions(): array
+    public function folder(): string
     {
-        return [
+        return match ($this) {
             self::SevenZip,
             self::Gz,
             self::Rar,
             self::Tar,
-            self::Zip,
-        ];
-    }
-
-    public static function audioExtensions(): array
-    {
-        return [
+            self::Zip => self::FOLDER_ARCHIVE,
             self::Flac,
             self::M4a,
             self::Mp3,
             self::Ogg,
-            self::Wav,
-        ];
-    }
-
-    public static function documentExtensions(): array
-    {
-        return [
+            self::Wav => self::FOLDER_AUDIO,
             self::Csv,
             self::Doc,
             self::Docx,
@@ -100,13 +89,7 @@ enum FileExtension: string
             self::Rtf,
             self::Txt,
             self::Xls,
-            self::Xlsx,
-        ];
-    }
-
-    public static function imageExtensions(): array
-    {
-        return [
+            self::Xlsx => self::FOLDER_DOCUMENT,
             self::Apng,
             self::Avif,
             self::Gif,
@@ -117,100 +100,105 @@ enum FileExtension: string
             self::Pjpeg,
             self::Png,
             self::Svg,
-            self::Webp,
-        ];
-    }
-
-    public static function videoExtensions(): array
-    {
-        return [
+            self::Webp => self::FOLDER_IMAGE,
             self::Avi,
             self::Mkv,
             self::Mov,
             self::Mp4,
-            self::Webm,
-        ];
-    }
-
-    public static function fileExtensions(): array
-    {
-        return [
-            self::Json,
-            self::Xml,
-        ];
-    }
-
-    public static function getByMimeType(string $mimeType): self
-    {
-        return [
-            'application/epub+zip' => self::Zip,
-            'application/gzip' => self::Gz,
-            'application/json' => self::Json,
-            'application/msword' => self::Doc,
-            'application/pdf' => self::Pdf,
-            'application/rtf' => self::Rtf,
-            'application/vnd.ms-excel' => self::Xls,
-            'application/vnd.ms-powerpoint' => self::Ppt,
-            'application/vnd.oasis.opendocument.spreadsheet' => self::Ods,
-            'application/vnd.oasis.opendocument.text' => self::Odt,
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => self::Pptx,
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => self::Xlsx,
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => self::Docx,
-            'application/vnd.rar' => self::Rar,
-            'application/x-7z-compressed' => self::SevenZip,
-            'application/x-rar-compressed' => self::Rar,
-            'application/x-tar' => self::Tar,
-            'application/x-zip-compressed' => self::Zip,
-            'application/xml' => self::Xml,
-            'application/zip' => self::Zip,
-            'audio/flac' => self::Flac,
-            'audio/m4a' => self::M4a,
-            'audio/mp3' => self::Mp3,
-            'audio/mp4' => self::M4a,
-            'audio/mpeg' => self::Mp3,
-            'audio/ogg' => self::Ogg,
-            'audio/wav' => self::Wav,
-            'audio/x-wav' => self::Wav,
-            'image/apng' => self::Apng,
-            'image/avif' => self::Avif,
-            'image/gif' => self::Gif,
-            'image/jpeg' => self::Jpg,
-            'image/pjpeg' => self::Pjpeg,
-            'image/png' => self::Png,
-            'image/svg+xml' => self::Svg,
-            'image/webp' => self::Webp,
-            'text/csv' => self::Csv,
-            'text/plain' => self::Txt,
-            'text/xml' => self::Xml,
-            'video/avi' => self::Avi,
-            'video/mp4' => self::Mp4,
-            'video/quicktime' => self::Mov,
-            'video/webm' => self::Webm,
-            'video/x-matroska' => self::Mkv,
-            'video/x-msvideo' => self::Avi,
-        ][$mimeType] ?? throw new ValueError("$mimeType is not a supported file MIME type");
-    }
-
-    public function folder(): string
-    {
-        return match (true) {
-            self::containsExtension(self::archiveExtensions(), $this) => self::FOLDER_ARCHIVE,
-            self::containsExtension(self::audioExtensions(), $this) => self::FOLDER_AUDIO,
-            self::containsExtension(self::documentExtensions(), $this) => self::FOLDER_DOCUMENT,
-            self::containsExtension(self::imageExtensions(), $this) => self::FOLDER_IMAGE,
-            self::containsExtension(self::videoExtensions(), $this) => self::FOLDER_VIDEO,
+            self::Webm => self::FOLDER_VIDEO,
             default => self::FOLDER_FILE,
         };
     }
 
-    private static function containsExtension(array $extensions, self $fileExtension): bool
+    public function contentType(): string
     {
-        foreach ($extensions as $extension) {
-            if (cmprenum($extension, $fileExtension)) {
-                return true;
+        return match ($this) {
+            self::SevenZip => 'application/x-7z-compressed',
+            self::Apng => 'image/apng',
+            self::Avi => 'video/x-msvideo',
+            self::Avif => 'image/avif',
+            self::Csv => 'text/csv',
+            self::Doc => 'application/msword',
+            self::Docx => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            self::Flac => 'audio/flac',
+            self::Gif => 'image/gif',
+            self::Gz => 'application/gzip',
+            self::Jfif,
+            self::Jpeg,
+            self::Jpg,
+            self::Pjp,
+            self::Pjpeg => 'image/jpeg',
+            self::Json => 'application/json',
+            self::M4a => 'audio/mp4',
+            self::Mkv => 'video/x-matroska',
+            self::Mov => 'video/quicktime',
+            self::Mp3 => 'audio/mpeg',
+            self::Mp4 => 'video/mp4',
+            self::Ods => 'application/vnd.oasis.opendocument.spreadsheet',
+            self::Odt => 'application/vnd.oasis.opendocument.text',
+            self::Ogg => 'audio/ogg',
+            self::Pdf => 'application/pdf',
+            self::Png => 'image/png',
+            self::Ppt => 'application/vnd.ms-powerpoint',
+            self::Pptx => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            self::Rar => 'application/vnd.rar',
+            self::Rtf => 'application/rtf',
+            self::Svg => 'image/svg+xml',
+            self::Tar => 'application/x-tar',
+            self::Txt => 'text/plain',
+            self::Wav => 'audio/wav',
+            self::Webm => 'video/webm',
+            self::Webp => 'image/webp',
+            self::Xls => 'application/vnd.ms-excel',
+            self::Xlsx => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            self::Xml => 'application/xml',
+            self::Zip => 'application/zip',
+        };
+    }
+
+    public function isImage(): bool
+    {
+        return cmprstr($this->folder(), self::FOLDER_IMAGE);
+    }
+
+    public function storageImageExtension(): self
+    {
+        if ($this->isConvertibleToStoredImage()) {
+            return self::STORED_IMAGE_EXTENSION;
+        }
+
+        return $this;
+    }
+
+    public function isConvertibleToStoredImage(): bool
+    {
+        return match ($this) {
+            self::Avif,
+            self::Jfif,
+            self::Jpeg,
+            self::Jpg,
+            self::Pjp,
+            self::Pjpeg,
+            self::Png,
+            self::Webp => true,
+            default => false,
+        };
+    }
+
+    public static function acceptedExtensions(?string $folder = null): array
+    {
+        if (! is_string($folder)) {
+            return config('laravel-files.accept_extensions');
+        }
+
+        $filteredExtensions = [];
+
+        foreach (config('laravel-files.accept_extensions') as $extension) {
+            if (cmprstr($extension->folder(), $folder)) {
+                $filteredExtensions[] = $extension;
             }
         }
 
-        return false;
+        return $filteredExtensions;
     }
 }

@@ -9,7 +9,25 @@ use Mantax559\LaravelHelpers\Helpers\ValidationHelper;
 
 final class FileValidationHelper
 {
-    private const BYTES_IN_KILOBYTE = 1024;
+    private const int BYTES_IN_KILOBYTE = 1024;
+
+    private const string RULE_FILE = 'file';
+
+    private const string RULE_IMAGE = 'image';
+
+    private const string RULE_SIZE = 'size';
+
+    private const string RULE_MIN = 'min';
+
+    private const string RULE_MAX = 'max';
+
+    private const string RULE_MIMES = 'mimes';
+
+    private const string RULE_DIMENSIONS = 'dimensions';
+
+    private const string DIMENSION_WIDTH = 'width';
+
+    private const string DIMENSION_HEIGHT = 'height';
 
     public static function getArchiveRules(
         string|bool|null $required = null,
@@ -20,9 +38,9 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'file',
+            self::RULE_FILE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_archive_extensions')),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_ARCHIVE)),
         );
     }
 
@@ -35,9 +53,9 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'file',
+            self::RULE_FILE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_audio_extensions')),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_AUDIO)),
         );
     }
 
@@ -50,9 +68,9 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'file',
+            self::RULE_FILE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_document_extensions')),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_DOCUMENT)),
         );
     }
 
@@ -71,13 +89,13 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'image',
+            self::RULE_IMAGE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            'dimensions:'.implode(',', [
-                ...self::getImageDimensionRules('width', $width, $minWidth, $maxWidth),
-                ...self::getImageDimensionRules('height', $height, $minHeight, $maxHeight),
+            self::RULE_DIMENSIONS.':'.implode(',', [
+                ...self::getImageDimensionRules(self::DIMENSION_WIDTH, $width, $minWidth, $maxWidth),
+                ...self::getImageDimensionRules(self::DIMENSION_HEIGHT, $height, $minHeight, $maxHeight),
             ]),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_image_extensions')),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_IMAGE)),
         );
     }
 
@@ -90,9 +108,9 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'file',
+            self::RULE_FILE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? config('laravel-files.accept_video_extensions')),
+            self::getMimesRule($mimes ?? FileExtension::acceptedExtensions(FileExtension::FOLDER_VIDEO)),
         );
     }
 
@@ -105,9 +123,9 @@ final class FileValidationHelper
     ): array {
         return ValidationHelper::mergeRules(
             ValidationHelper::getRequiredRules($required),
-            'file',
+            self::RULE_FILE,
             self::getFileSizeRules($fileSize, $minFileSize, $maxFileSize),
-            self::getMimesRule($mimes ?? self::getAllAcceptedExtensions()),
+            self::getMimesRule($mimes ?? config('laravel-files.accept_extensions')),
         );
     }
 
@@ -117,19 +135,19 @@ final class FileValidationHelper
         ?int $maxFileSize = null
     ): array {
         if (! empty($fileSize)) {
-            return ["size:$fileSize"];
+            return [self::RULE_SIZE.':'.$fileSize];
         }
 
         $fileSizes = [];
 
         if (! empty($minFileSize)) {
-            $fileSizes[] = "min:$minFileSize";
+            $fileSizes[] = self::RULE_MIN.':'.$minFileSize;
         }
 
         if (! empty($maxFileSize)) {
-            $fileSizes[] = "max:$maxFileSize";
+            $fileSizes[] = self::RULE_MAX.':'.$maxFileSize;
         } else {
-            $fileSizes[] = 'max:'.ceil(config('laravel-files.max_upload_file_size_bytes') / self::BYTES_IN_KILOBYTE);
+            $fileSizes[] = self::RULE_MAX.':'.floor(config('laravel-files.max_upload_file_size_bytes') / self::BYTES_IN_KILOBYTE);
         }
 
         return $fileSizes;
@@ -142,25 +160,25 @@ final class FileValidationHelper
         ?int $max
     ): array {
         if (! empty($exact)) {
-            return ["$side=$exact"];
+            return [$side.'='.$exact];
         }
 
         $dimensions = [];
 
         if (! empty($min)) {
-            $dimensions[] = "min_$side=$min";
+            $dimensions[] = self::RULE_MIN.'_'.$side.'='.$min;
         }
 
         $dimensions[] = ! empty($max)
-            ? "max_$side=$max"
-            : 'max_'.$side.'='.config('laravel-files.max_upload_image_side_pixels');
+            ? self::RULE_MAX.'_'.$side.'='.$max
+            : self::RULE_MAX.'_'.$side.'='.config('laravel-files.max_upload_image_side_pixels');
 
         return $dimensions;
     }
 
     private static function getMimesRule(array $mimes): string
     {
-        return 'mimes:'.implode(',', self::getMimeValues($mimes));
+        return self::RULE_MIMES.':'.implode(',', self::getMimeValues($mimes));
     }
 
     private static function getMimeValues(array $mimes): array
@@ -174,17 +192,5 @@ final class FileValidationHelper
         }
 
         return $mimeValues;
-    }
-
-    private static function getAllAcceptedExtensions(): array
-    {
-        return [
-            ...config('laravel-files.accept_archive_extensions'),
-            ...config('laravel-files.accept_audio_extensions'),
-            ...config('laravel-files.accept_document_extensions'),
-            ...config('laravel-files.accept_image_extensions'),
-            ...config('laravel-files.accept_video_extensions'),
-            ...config('laravel-files.accept_file_extensions'),
-        ];
     }
 }

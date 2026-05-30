@@ -6,7 +6,8 @@ namespace Mantax559\LaravelFiles\Helpers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
-use Mantax559\LaravelFiles\Services\FileService;
+use Mantax559\LaravelFiles\Services\FileManager;
+use Mantax559\LaravelObservability\Models\Log;
 
 final class FileHelper
 {
@@ -16,18 +17,27 @@ final class FileHelper
         '::1',
     ];
 
-    public static function cacheImage(string $sourcePath, string $size, string|int|array|Model|null $folderSource = null): string
-    {
-        return FileService::cacheImage(
+    public static function cacheImage(
+        string $sourcePath,
+        string $size,
+        string|int|array|Model|null $folderSource = null
+    ): string {
+        [$width, $height] = self::imageCacheSize($sourcePath, $size);
+
+        return FileManager::cacheImage(
             $sourcePath,
-            config('laravel-files.image_cache_sizes')[$size]['width'],
-            config('laravel-files.image_cache_sizes')[$size]['height'],
+            $width,
+            $height,
             self::normalizeFolders($folderSource)
         );
     }
 
-    public static function emailImage(string $sourcePath, string $size, Message $message, string|int|array|Model|null $folderSource = null): string
-    {
+    public static function emailImage(
+        string $sourcePath,
+        string $size,
+        Message $message,
+        string|int|array|Model|null $folderSource = null
+    ): string {
         $url = self::cacheImage($sourcePath, $size, $folderSource);
 
         if (self::isLocalhostUrl()) {
@@ -35,6 +45,27 @@ final class FileHelper
         }
 
         return $url;
+    }
+
+    private static function imageCacheSize(string $sourcePath, string $size): array
+    {
+        if (
+            empty(config('laravel-files.image_cache_sizes')[$size]['width'])
+            && empty(config('laravel-files.image_cache_sizes')[$size]['height'])
+        ) {
+            Log::error('Invalid image cache size configuration.', [
+                'source_path' => $sourcePath,
+                'size' => $size,
+                'image_cache_sizes' => config('laravel-files.image_cache_sizes'),
+            ]);
+
+            return [null, null];
+        }
+
+        return [
+            config('laravel-files.image_cache_sizes')[$size]['width'] ?? null,
+            config('laravel-files.image_cache_sizes')[$size]['height'] ?? null,
+        ];
     }
 
     private static function normalizeFolders(string|int|array|Model|null $folderSource): string|int|array|null

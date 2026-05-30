@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "A fájl nem olvasható. Adjon meg érvényes helyi útvonalat vagy URL-t.",
-  "File does not exist: :path": "A fájl nem létezik: :path",
-  "The file could not be opened. Please try uploading it again.": "A fájlt nem lehetett megnyitni. Próbálja meg újra feltölteni.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "A feltöltött fájl túl nagy. A maximálisan engedélyezett méret :max_size, a tényleges méret :actual_size.",
+  "The file model could not be deleted.": "A fájlmodell nem törölhető.",
+  "The file could not be read.": "A fájl nem olvasható.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "A fájl nem menthető. Kérjük, lépjen kapcsolatba az ügyfélszolgálattal a következő kóddal: :error_code",
+  "The file model references a missing file.": "A fájlmodell egy hiányzó fájlra hivatkozik.",
+  "The file cache directory could not be deleted.": "A fájl gyorsítótár-könyvtára nem törölhető.",
+  "The file could not be opened. Please try uploading it again.": "A fájl nem nyitható meg. Próbálja meg újra feltölteni.",
   "The file extension could not be detected.": "A fájlkiterjesztés nem észlelhető.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Az észlelt MIME-típus :mime nem támogatott. Elfogadott formátumok: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "A :extension fájlformátum nem engedélyezett. Elfogadott :folder formátumok: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "A :extension fájlkiterjesztés nem támogatott. Elfogadott formátumok: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "A(z) :extension fájlkiterjesztés nem támogatott. Elfogadott formátumok: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "A(z) :extension fájlformátum nem engedélyezett. Elfogadott :folder formátumok: :extensions.",
   "The uploaded file is not a valid image.": "A feltöltött fájl nem érvényes kép.",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "A kép felbontása túl nagy. A maximálisan engedélyezett oldal :max_sidepx, a tényleges felbontás :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "A mentett fájl túl nagy. A maximálisan engedélyezett méret :max_size, a tényleges méret :actual_size."
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "A fájl túl nagy. Maximálisan engedélyezett méret: :max_size, tényleges méret: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "A fájlfeltöltések nincsenek konfigurálva. Lépjen kapcsolatba a rendszergazdával.",
+  "The file could not be moved to rollback storage.": "A fájlt nem sikerült áthelyezni a visszaállítási tárhelyre.",
+  "The file could not be restored from rollback storage.": "A fájlt nem sikerült visszaállítani a visszaállítási tárhelyről.",
+  "The file could not be deleted.": "A fájl nem törölhető.",
+  "The file directory could not be deleted.": "A fájl könyvtára nem törölhető."
 }

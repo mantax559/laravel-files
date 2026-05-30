@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Failu neizdevās nolasīt. Norādiet derīgu lokālo ceļu vai URL.",
-  "File does not exist: :path": "Fails neeksistē: :path",
-  "The file could not be opened. Please try uploading it again.": "Failu neizdevās atvērt. Lūdzu, mēģiniet to augšupielādēt vēlreiz.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Augšupielādētais fails ir pārāk liels. Maksimālais atļautais izmērs ir :max_size, faktiskais izmērs ir :actual_size.",
+  "The file model could not be deleted.": "Faila modeli neizdevās dzēst.",
+  "The file could not be read.": "Failu neizdevās nolasīt.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Failu neizdevās saglabāt. Sazinieties ar atbalstu un norādiet šo kodu: :error_code",
+  "The file model references a missing file.": "Faila modelis atsaucas uz trūkstošu failu.",
+  "The file cache directory could not be deleted.": "Faila kešatmiņas direktoriju neizdevās dzēst.",
+  "The file could not be opened. Please try uploading it again.": "Failu neizdevās atvērt. Lūdzu, augšupielādējiet to vēlreiz.",
   "The file extension could not be detected.": "Faila paplašinājumu neizdevās noteikt.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Noteiktais MIME tips :mime netiek atbalstīts. Pieņemtie formāti: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": ":extension faila formāts nav atļauts. Pieņemtie :folder formāti: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": ":extension faila paplašinājums netiek atbalstīts. Pieņemtie formāti: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Faila paplašinājums :extension netiek atbalstīts. Pieņemtie formāti: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Faila formāts :extension nav atļauts. Pieņemtie :folder formāti: :extensions.",
   "The uploaded file is not a valid image.": "Augšupielādētais fails nav derīgs attēls.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Attēla izšķirtspēja ir pārāk liela. Maksimālā atļautā mala ir :max_sidepx, faktiskā izšķirtspēja ir :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Saglabātais fails ir pārāk liels. Maksimālais atļautais izmērs ir :max_size, faktiskais izmērs ir :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Attēla izšķirtspēja ir pārāk liela. Maksimāli atļautā mala ir :max_sidepx, faktiskā izšķirtspēja ir :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Fails ir pārāk liels. Maksimāli atļautais izmērs: :max_size, faktiskais izmērs: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Failu augšupielāde nav konfigurēta. Sazinieties ar sistēmas administratoru.",
+  "The file could not be moved to rollback storage.": "Failu neizdevās pārvietot uz atcelšanas krātuvi.",
+  "The file could not be restored from rollback storage.": "Failu neizdevās atjaunot no atcelšanas krātuves.",
+  "The file could not be deleted.": "Failu neizdevās dzēst.",
+  "The file directory could not be deleted.": "Faila direktoriju neizdevās dzēst."
 }

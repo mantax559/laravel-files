@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "无法读取文件。请提供有效的本地路径或 URL。",
-  "File does not exist: :path": "文件不存在：:path",
+  "The file model could not be deleted.": "无法删除文件模型。",
+  "The file could not be read.": "无法读取文件。",
+  "The file could not be stored. Please contact support with the following code: :error_code": "无法保存文件。请联系支持并提供以下代码：:error_code",
+  "The file model references a missing file.": "文件模型引用了缺失的文件。",
+  "The file cache directory could not be deleted.": "无法删除文件缓存目录。",
   "The file could not be opened. Please try uploading it again.": "无法打开文件。请尝试重新上传。",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "上传的文件过大。允许的最大大小为 :max_size，实际大小为 :actual_size。",
   "The file extension could not be detected.": "无法检测文件扩展名。",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "检测到的 MIME 类型 :mime 不受支持。接受的格式：:extensions。",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "文件格式 :extension 不被允许。接受的 :folder 格式：:extensions。",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "文件扩展名 :extension 不受支持。接受的格式：:extensions。",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "不支持文件扩展名 :extension。接受的格式：:extensions。",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "不允许文件格式 :extension。接受的 :folder 格式：:extensions。",
   "The uploaded file is not a valid image.": "上传的文件不是有效图片。",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "图片分辨率过大。允许的最大边长为 :max_sidepx，实际分辨率为 :widthx:heightpx。",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "保存的文件过大。允许的最大大小为 :max_size，实际大小为 :actual_size。"
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "文件过大。允许的最大大小：:max_size，实际大小：:actual_size。",
+  "File uploads are not configured. Please contact the system administrator.": "文件上传未配置。请联系系统管理员。",
+  "The file could not be moved to rollback storage.": "无法将文件移动到回滚存储。",
+  "The file could not be restored from rollback storage.": "无法从回滚存储恢复文件。",
+  "The file could not be deleted.": "无法删除文件。",
+  "The file directory could not be deleted.": "无法删除文件目录。"
 }

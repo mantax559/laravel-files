@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Filen kunne ikke læses. Angiv en gyldig lokal sti eller URL.",
-  "File does not exist: :path": "Filen findes ikke: :path",
+  "The file model could not be deleted.": "Filmodellen kunne ikke slettes.",
+  "The file could not be read.": "Filen kunne ikke læses.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Filen kunne ikke gemmes. Kontakt support med følgende kode: :error_code",
+  "The file model references a missing file.": "Filmodellen henviser til en manglende fil.",
+  "The file cache directory could not be deleted.": "Filens cachemappe kunne ikke slettes.",
   "The file could not be opened. Please try uploading it again.": "Filen kunne ikke åbnes. Prøv at uploade den igen.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Den uploadede fil er for stor. Maksimal tilladt størrelse er :max_size, faktisk størrelse er :actual_size.",
   "The file extension could not be detected.": "Filtypen kunne ikke registreres.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Den registrerede MIME-type :mime understøttes ikke. Accepterede formater: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Filformatet :extension er ikke tilladt. Accepterede :folder-formater: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Filtypen :extension understøttes ikke. Accepterede formater: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Filformatet :extension er ikke tilladt. Accepterede :folder-formater: :extensions.",
   "The uploaded file is not a valid image.": "Den uploadede fil er ikke et gyldigt billede.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Billedopløsningen er for stor. Maksimal tilladt side er :max_sidepx, faktisk opløsning er :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Den gemte fil er for stor. Maksimal tilladt størrelse er :max_size, faktisk størrelse er :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Billedopløsningen er for stor. Den maksimalt tilladte side er :max_sidepx, den faktiske opløsning er :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Filen er for stor. Maksimalt tilladt størrelse: :max_size, faktisk størrelse: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Filuploads er ikke konfigureret. Kontakt systemadministratoren.",
+  "The file could not be moved to rollback storage.": "Filen kunne ikke flyttes til rollback-lageret.",
+  "The file could not be restored from rollback storage.": "Filen kunne ikke gendannes fra rollback-lageret.",
+  "The file could not be deleted.": "Filen kunne ikke slettes.",
+  "The file directory could not be deleted.": "Filens mappe kunne ikke slettes."
 }

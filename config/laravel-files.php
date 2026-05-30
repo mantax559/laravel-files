@@ -11,7 +11,7 @@ return [
     | Files Table
     |--------------------------------------------------------------------------
     |
-    | This table stores file metadata such as path, extension, source, and size.
+    | This table stores file metadata such as path, extension, and size.
     | The package model and migration both read this value, so change it before
     | migrating when your application needs a custom table name.
     |
@@ -59,6 +59,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Image Cache URL
+    |--------------------------------------------------------------------------
+    |
+    | This public URL is returned when an image cache variant cannot be generated.
+    | The published default asset can be replaced by the application.
+    |
+    */
+
+    'default_image_cache_url' => 'vendor/laravel-files/image/default-cache-image.svg',
+
+    /*
+    |--------------------------------------------------------------------------
     | Image Cache Sizes
     |--------------------------------------------------------------------------
     |
@@ -68,7 +80,8 @@ return [
     */
 
     'image_cache_sizes' => [
-        // 'logo' => ['width' => 60, 'height' => 50],
+        // 'logo' => ['height' => 50],
+        // 'banner' => ['width' => 1200, 'height' => 800],
     ],
 
     /*
@@ -121,111 +134,55 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Accepted Archive Extensions
+    | Accepted Extensions
     |--------------------------------------------------------------------------
     |
-    | Archive uploads are accepted only when their detected extension exists in
-    | this list.
+    | Uploaded files are accepted only when their detected extension exists in
+    | this list. Each extension resolves its own storage folder through the
+    | FileExtension enum, so categories do not need separate configuration.
     |
     */
 
-    'accept_archive_extensions' => [
+    'accept_extensions' => [
         FileExtension::SevenZip,
-        FileExtension::Gz,
-        FileExtension::Rar,
-        FileExtension::Tar,
-        FileExtension::Zip,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accepted Audio Extensions
-    |--------------------------------------------------------------------------
-    |
-    | Audio uploads are accepted only when their detected extension exists in
-    | this list.
-    |
-    */
-
-    'accept_audio_extensions' => [
-        FileExtension::M4a,
-        FileExtension::Mp3,
-        FileExtension::Wav,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accepted Document Extensions
-    |--------------------------------------------------------------------------
-    |
-    | Document uploads are accepted only when their detected extension exists in
-    | this list.
-    |
-    */
-
-    'accept_document_extensions' => [
+        FileExtension::Apng,
+        FileExtension::Avi,
+        FileExtension::Avif,
         FileExtension::Csv,
         FileExtension::Doc,
         FileExtension::Docx,
-        FileExtension::Pdf,
-        FileExtension::Ppt,
-        FileExtension::Pptx,
-        FileExtension::Rtf,
-        FileExtension::Txt,
-        FileExtension::Xls,
-        FileExtension::Xlsx,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accepted Image Extensions
-    |--------------------------------------------------------------------------
-    |
-    | Image uploads are accepted only when their detected extension exists in
-    | this list. Convertible image uploads are stored as AVIF by default.
-    |
-    */
-
-    'accept_image_extensions' => [
-        FileExtension::Avif,
+        FileExtension::Flac,
         FileExtension::Gif,
+        FileExtension::Gz,
+        FileExtension::Jfif,
         FileExtension::Jpeg,
         FileExtension::Jpg,
-        FileExtension::Png,
-        FileExtension::Svg,
-        FileExtension::Webp,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accepted Video Extensions
-    |--------------------------------------------------------------------------
-    |
-    | Video uploads are accepted only when their detected extension exists in
-    | this list.
-    |
-    */
-
-    'accept_video_extensions' => [
-        FileExtension::Avi,
+        FileExtension::Json,
+        FileExtension::M4a,
         FileExtension::Mkv,
         FileExtension::Mov,
+        FileExtension::Mp3,
         FileExtension::Mp4,
+        FileExtension::Ods,
+        FileExtension::Odt,
+        FileExtension::Ogg,
+        FileExtension::Pdf,
+        FileExtension::Pjpeg,
+        FileExtension::Pjp,
+        FileExtension::Png,
+        FileExtension::Ppt,
+        FileExtension::Pptx,
+        FileExtension::Rar,
+        FileExtension::Rtf,
+        FileExtension::Svg,
+        FileExtension::Tar,
+        FileExtension::Txt,
+        FileExtension::Wav,
         FileExtension::Webm,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accepted Generic File Extensions
-    |--------------------------------------------------------------------------
-    |
-    | Extensions that do not belong to archive, audio, document, image, or video
-    | categories are accepted only when listed here.
-    |
-    */
-
-    'accept_file_extensions' => [
-        FileExtension::Json,
+        FileExtension::Webp,
+        FileExtension::Xls,
+        FileExtension::Xlsx,
         FileExtension::Xml,
+        FileExtension::Zip,
     ],
 ];

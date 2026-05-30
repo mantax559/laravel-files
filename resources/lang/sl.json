@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Datoteke ni bilo mogoče prebrati. Navedite veljavno lokalno pot ali URL.",
-  "File does not exist: :path": "Datoteka ne obstaja: :path",
+  "The file model could not be deleted.": "Modela datoteke ni bilo mogoče izbrisati.",
+  "The file could not be read.": "Datoteke ni bilo mogoče prebrati.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Datoteke ni bilo mogoče shraniti. Obrnite se na podporo z naslednjo kodo: :error_code",
+  "The file model references a missing file.": "Model datoteke se sklicuje na manjkajočo datoteko.",
+  "The file cache directory could not be deleted.": "Imenika predpomnilnika datoteke ni bilo mogoče izbrisati.",
   "The file could not be opened. Please try uploading it again.": "Datoteke ni bilo mogoče odpreti. Poskusite jo znova naložiti.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Naložena datoteka je prevelika. Največja dovoljena velikost je :max_size, dejanska velikost je :actual_size.",
   "The file extension could not be detected.": "Pripone datoteke ni bilo mogoče zaznati.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Zaznana vrsta MIME :mime ni podprta. Sprejeti formati: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Format datoteke :extension ni dovoljen. Sprejeti :folder formati: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Pripona datoteke :extension ni podprta. Sprejeti formati: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Format datoteke :extension ni dovoljen. Sprejeti formati :folder: :extensions.",
   "The uploaded file is not a valid image.": "Naložena datoteka ni veljavna slika.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Ločljivost slike je prevelika. Največja dovoljena stran je :max_sidepx, dejanska ločljivost je :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Shranjena datoteka je prevelika. Največja dovoljena velikost je :max_size, dejanska velikost je :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Ločljivost slike je prevelika. Največja dovoljena stranica je :max_sidepx, dejanska ločljivost je :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Datoteka je prevelika. Največja dovoljena velikost: :max_size, dejanska velikost: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Nalaganje datotek ni konfigurirano. Obrnite se na skrbnika sistema.",
+  "The file could not be moved to rollback storage.": "Datoteke ni bilo mogoče premakniti v shrambo za povrnitev.",
+  "The file could not be restored from rollback storage.": "Datoteke ni bilo mogoče obnoviti iz shrambe za povrnitev.",
+  "The file could not be deleted.": "Datoteke ni bilo mogoče izbrisati.",
+  "The file directory could not be deleted.": "Imenika datoteke ni bilo mogoče izbrisati."
 }

@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Filen kunne ikke leses. Oppgi en gyldig lokal sti eller URL.",
-  "File does not exist: :path": "Filen finnes ikke: :path",
-  "The file could not be opened. Please try uploading it again.": "Filen kunne ikke åpnes. Prøv å laste den opp på nytt.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Den opplastede filen er for stor. Maksimal tillatt størrelse er :max_size, faktisk størrelse er :actual_size.",
+  "The file model could not be deleted.": "Filmodellen kunne ikke slettes.",
+  "The file could not be read.": "Filen kunne ikke leses.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Filen kunne ikke lagres. Kontakt brukerstøtte med følgende kode: :error_code",
+  "The file model references a missing file.": "Filmodellen refererer til en manglende fil.",
+  "The file cache directory could not be deleted.": "Filens hurtigbufferkatalog kunne ikke slettes.",
+  "The file could not be opened. Please try uploading it again.": "Filen kunne ikke åpnes. Prøv å laste den opp igjen.",
   "The file extension could not be detected.": "Filtypen kunne ikke oppdages.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Den oppdagede MIME-typen :mime støttes ikke. Aksepterte formater: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Filformatet :extension er ikke tillatt. Aksepterte :folder-formater: :extensions.",
-  "The :extension file extension is not supported. Accepted formats: :extensions.": "Filtypen :extension støttes ikke. Aksepterte formater: :extensions.",
+  "The :extension file extension is not supported. Accepted formats: :extensions.": "Filtypen :extension støttes ikke. Godkjente formater: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Filformatet :extension er ikke tillatt. Godkjente :folder-formater: :extensions.",
   "The uploaded file is not a valid image.": "Den opplastede filen er ikke et gyldig bilde.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Bildeoppløsningen er for stor. Maksimal tillatt side er :max_sidepx, faktisk oppløsning er :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Den lagrede filen er for stor. Maksimal tillatt størrelse er :max_size, faktisk størrelse er :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Bildeoppløsningen er for stor. Maksimalt tillatt side er :max_sidepx, faktisk oppløsning er :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Filen er for stor. Maksimalt tillatt størrelse: :max_size, faktisk størrelse: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Filopplastinger er ikke konfigurert. Kontakt systemadministratoren.",
+  "The file could not be moved to rollback storage.": "Filen kunne ikke flyttes til tilbakeføringslageret.",
+  "The file could not be restored from rollback storage.": "Filen kunne ikke gjenopprettes fra tilbakeføringslageret.",
+  "The file could not be deleted.": "Filen kunne ikke slettes.",
+  "The file directory could not be deleted.": "Filkatalogen kunne ikke slettes."
 }

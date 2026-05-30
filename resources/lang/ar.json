@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "تعذر قراءة الملف. يرجى تقديم مسار محلي صالح أو عنوان URL صالح.",
-  "File does not exist: :path": "الملف غير موجود: :path",
+  "The file model could not be deleted.": "تعذر حذف نموذج الملف.",
+  "The file could not be read.": "تعذرت قراءة الملف.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "تعذر حفظ الملف. يرجى التواصل مع الدعم وإرفاق الرمز التالي: :error_code",
+  "The file model references a missing file.": "يشير نموذج الملف إلى ملف مفقود.",
+  "The file cache directory could not be deleted.": "تعذر حذف مجلد ذاكرة التخزين المؤقت للملف.",
   "The file could not be opened. Please try uploading it again.": "تعذر فتح الملف. يرجى محاولة رفعه مرة أخرى.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "الملف المرفوع كبير جدًا. الحجم الأقصى المسموح به هو :max_size، والحجم الفعلي هو :actual_size.",
   "The file extension could not be detected.": "تعذر اكتشاف امتداد الملف.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "نوع MIME المكتشف :mime غير مدعوم. الصيغ المقبولة: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "صيغة الملف :extension غير مسموح بها. صيغ :folder المقبولة: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "امتداد الملف :extension غير مدعوم. الصيغ المقبولة: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "صيغة الملف :extension غير مسموحة. صيغ :folder المقبولة: :extensions.",
   "The uploaded file is not a valid image.": "الملف المرفوع ليس صورة صالحة.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "دقة الصورة كبيرة جدًا. الحد الأقصى المسموح للجانب هو :max_sidepx، والدقة الفعلية هي :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "الملف المحفوظ كبير جدًا. الحجم الأقصى المسموح به هو :max_size، والحجم الفعلي هو :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "دقة الصورة كبيرة جدًا. الحد الأقصى المسموح للضلع هو :max_sidepx، والدقة الفعلية هي :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "الملف كبير جدًا. الحجم الأقصى المسموح: :max_size، الحجم الفعلي: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "رفع الملفات غير مهيأ. يرجى التواصل مع مسؤول النظام.",
+  "The file could not be moved to rollback storage.": "تعذر نقل الملف إلى تخزين التراجع.",
+  "The file could not be restored from rollback storage.": "تعذرت استعادة الملف من تخزين التراجع.",
+  "The file could not be deleted.": "تعذر حذف الملف.",
+  "The file directory could not be deleted.": "تعذر حذف مجلد الملف."
 }

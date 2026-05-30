@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Tests;
 
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Intervention\Image\Laravel\ServiceProvider as ImageServiceProvider;
 use Mantax559\LaravelFiles\Providers\AppServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
@@ -23,6 +25,25 @@ abstract class TestCase extends BaseTestCase
             $config->set('filesystems.default', 'local');
             $config->set('queue.default', 'sync');
             $config->set('session.driver', 'array');
+            $config->set('laravel-observability.activity_table', 'activities');
+            $config->set('laravel-observability.log_table', 'logs');
+            $config->set('laravel-observability.user_model', 'Mantax559\\LaravelFiles\\Models\\File');
+            $config->set('laravel-observability.user_relationship_name', 'user');
+            $config->set('laravel-observability.actual_user_column', 'actual_user_id');
+            $config->set('laravel-observability.actual_user_relationship_name', 'actualUser');
+            $config->set('laravel-observability.assigned_user_column', 'assigned_user_id');
+            $config->set('laravel-observability.assigned_user_relationship_name', 'assignedUser');
+            $config->set('laravel-observability.impersonation_initiator_session_key', 'impersonation_initiator_id');
+            $config->set('laravel-observability.user_uses_uuid', true);
+            $config->set('laravel-observability.except_columns', [
+                'id',
+                'created_at',
+                'updated_at',
+            ]);
+            $config->set('laravel-observability.sensitive_columns', []);
+            $config->set('laravel-observability.conditional_sensitive_columns', []);
+            $config->set('laravel-observability.data_value_max_length', 100);
+            $config->set('laravel-observability.code_length', 6);
         });
     }
 
@@ -32,5 +53,73 @@ abstract class TestCase extends BaseTestCase
             ImageServiceProvider::class,
             AppServiceProvider::class,
         ];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->createActivityTable();
+        $this->createLogTable();
+    }
+
+    private function createActivityTable(): void
+    {
+        if (Schema::hasTable(config('laravel-observability.activity_table'))) {
+            return;
+        }
+
+        Schema::create(config('laravel-observability.activity_table'), function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->uuid('file_id')->nullable();
+            $table->uuid(config('laravel-observability.actual_user_column'))->nullable();
+            $table->string('event');
+            $table->string('table');
+            $table->string('record_id');
+            $table->json('old_data')->nullable();
+            $table->json('new_data')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->string('user_agent')->nullable();
+            $table->string('locale')->nullable();
+            $table->string('request_method')->nullable();
+            $table->text('request_url')->nullable();
+            $table->text('referer')->nullable();
+            $table->string('session_id')->nullable();
+            $table->string('route_action')->nullable();
+            $table->integer('response_status')->nullable();
+            $table->integer('duration_ms')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
+        });
+    }
+
+    private function createLogTable(): void
+    {
+        if (Schema::hasTable(config('laravel-observability.log_table'))) {
+            return;
+        }
+
+        Schema::create(config('laravel-observability.log_table'), function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->string('file_id')->nullable();
+            $table->string(config('laravel-observability.actual_user_column'))->nullable();
+            $table->string(config('laravel-observability.assigned_user_column'))->nullable();
+            $table->string('status');
+            $table->string('code');
+            $table->longText('message');
+            $table->json('details')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->string('user_agent')->nullable();
+            $table->string('locale')->nullable();
+            $table->string('request_method')->nullable();
+            $table->text('request_url')->nullable();
+            $table->text('referer')->nullable();
+            $table->string('session_id')->nullable();
+            $table->string('route_action')->nullable();
+            $table->integer('response_status')->nullable();
+            $table->integer('duration_ms')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
+        });
     }
 }

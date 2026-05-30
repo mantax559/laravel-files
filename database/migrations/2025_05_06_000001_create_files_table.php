@@ -14,11 +14,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('path')->unique();
             $table->string('extension');
-            $table->string('source');
             $table->unsignedBigInteger('size');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
-            $table->softDeletes();
         });
     }
 

@@ -7,7 +7,6 @@ namespace Mantax559\LaravelFiles\Tests\Unit;
 use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use ValueError;
 
 final class FileExtensionTest extends TestCase
 {
@@ -59,17 +58,6 @@ final class FileExtensionTest extends TestCase
     }
 
     #[Test]
-    public function category_methods_return_expected_extensions(): void
-    {
-        $this->assertSame([FileExtension::SevenZip, FileExtension::Gz, FileExtension::Rar, FileExtension::Tar, FileExtension::Zip], FileExtension::archiveExtensions());
-        $this->assertSame([FileExtension::Flac, FileExtension::M4a, FileExtension::Mp3, FileExtension::Ogg, FileExtension::Wav], FileExtension::audioExtensions());
-        $this->assertContains(FileExtension::Pdf, FileExtension::documentExtensions());
-        $this->assertContains(FileExtension::Jpg, FileExtension::imageExtensions());
-        $this->assertSame([FileExtension::Avi, FileExtension::Mkv, FileExtension::Mov, FileExtension::Mp4, FileExtension::Webm], FileExtension::videoExtensions());
-        $this->assertSame([FileExtension::Json, FileExtension::Xml], FileExtension::fileExtensions());
-    }
-
-    #[Test]
     public function extension_resolves_storage_folder(): void
     {
         $this->assertSame(FileExtension::FOLDER_ARCHIVE, FileExtension::Zip->folder());
@@ -81,61 +69,83 @@ final class FileExtensionTest extends TestCase
     }
 
     #[Test]
-    public function mime_type_resolves_to_extension(): void
+    public function extension_knows_when_it_is_an_image(): void
     {
-        $this->assertSame(FileExtension::Zip, FileExtension::getByMimeType('application/epub+zip'));
-        $this->assertSame(FileExtension::Gz, FileExtension::getByMimeType('application/gzip'));
-        $this->assertSame(FileExtension::Json, FileExtension::getByMimeType('application/json'));
-        $this->assertSame(FileExtension::Doc, FileExtension::getByMimeType('application/msword'));
-        $this->assertSame(FileExtension::Pdf, FileExtension::getByMimeType('application/pdf'));
-        $this->assertSame(FileExtension::Rtf, FileExtension::getByMimeType('application/rtf'));
-        $this->assertSame(FileExtension::Xls, FileExtension::getByMimeType('application/vnd.ms-excel'));
-        $this->assertSame(FileExtension::Ppt, FileExtension::getByMimeType('application/vnd.ms-powerpoint'));
-        $this->assertSame(FileExtension::Ods, FileExtension::getByMimeType('application/vnd.oasis.opendocument.spreadsheet'));
-        $this->assertSame(FileExtension::Odt, FileExtension::getByMimeType('application/vnd.oasis.opendocument.text'));
-        $this->assertSame(FileExtension::Pptx, FileExtension::getByMimeType('application/vnd.openxmlformats-officedocument.presentationml.presentation'));
-        $this->assertSame(FileExtension::Xlsx, FileExtension::getByMimeType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
-        $this->assertSame(FileExtension::Docx, FileExtension::getByMimeType('application/vnd.openxmlformats-officedocument.wordprocessingml.document'));
-        $this->assertSame(FileExtension::Rar, FileExtension::getByMimeType('application/vnd.rar'));
-        $this->assertSame(FileExtension::SevenZip, FileExtension::getByMimeType('application/x-7z-compressed'));
-        $this->assertSame(FileExtension::Rar, FileExtension::getByMimeType('application/x-rar-compressed'));
-        $this->assertSame(FileExtension::Tar, FileExtension::getByMimeType('application/x-tar'));
-        $this->assertSame(FileExtension::Zip, FileExtension::getByMimeType('application/x-zip-compressed'));
-        $this->assertSame(FileExtension::Xml, FileExtension::getByMimeType('application/xml'));
-        $this->assertSame(FileExtension::Zip, FileExtension::getByMimeType('application/zip'));
-        $this->assertSame(FileExtension::Flac, FileExtension::getByMimeType('audio/flac'));
-        $this->assertSame(FileExtension::M4a, FileExtension::getByMimeType('audio/m4a'));
-        $this->assertSame(FileExtension::Mp3, FileExtension::getByMimeType('audio/mp3'));
-        $this->assertSame(FileExtension::M4a, FileExtension::getByMimeType('audio/mp4'));
-        $this->assertSame(FileExtension::Mp3, FileExtension::getByMimeType('audio/mpeg'));
-        $this->assertSame(FileExtension::Ogg, FileExtension::getByMimeType('audio/ogg'));
-        $this->assertSame(FileExtension::Wav, FileExtension::getByMimeType('audio/wav'));
-        $this->assertSame(FileExtension::Wav, FileExtension::getByMimeType('audio/x-wav'));
-        $this->assertSame(FileExtension::Apng, FileExtension::getByMimeType('image/apng'));
-        $this->assertSame(FileExtension::Avif, FileExtension::getByMimeType('image/avif'));
-        $this->assertSame(FileExtension::Gif, FileExtension::getByMimeType('image/gif'));
-        $this->assertSame(FileExtension::Jpg, FileExtension::getByMimeType('image/jpeg'));
-        $this->assertSame(FileExtension::Pjpeg, FileExtension::getByMimeType('image/pjpeg'));
-        $this->assertSame(FileExtension::Png, FileExtension::getByMimeType('image/png'));
-        $this->assertSame(FileExtension::Svg, FileExtension::getByMimeType('image/svg+xml'));
-        $this->assertSame(FileExtension::Webp, FileExtension::getByMimeType('image/webp'));
-        $this->assertSame(FileExtension::Csv, FileExtension::getByMimeType('text/csv'));
-        $this->assertSame(FileExtension::Txt, FileExtension::getByMimeType('text/plain'));
-        $this->assertSame(FileExtension::Xml, FileExtension::getByMimeType('text/xml'));
-        $this->assertSame(FileExtension::Avi, FileExtension::getByMimeType('video/avi'));
-        $this->assertSame(FileExtension::Mp4, FileExtension::getByMimeType('video/mp4'));
-        $this->assertSame(FileExtension::Mov, FileExtension::getByMimeType('video/quicktime'));
-        $this->assertSame(FileExtension::Webm, FileExtension::getByMimeType('video/webm'));
-        $this->assertSame(FileExtension::Mkv, FileExtension::getByMimeType('video/x-matroska'));
-        $this->assertSame(FileExtension::Avi, FileExtension::getByMimeType('video/x-msvideo'));
+        $this->assertSame(FileExtension::Avif, FileExtension::STORED_IMAGE_EXTENSION);
+        $this->assertTrue(FileExtension::Avif->isImage());
+        $this->assertTrue(FileExtension::Gif->isImage());
+        $this->assertTrue(FileExtension::Jpg->isImage());
+        $this->assertTrue(FileExtension::Png->isImage());
+        $this->assertTrue(FileExtension::Webp->isImage());
+        $this->assertFalse(FileExtension::Pdf->isImage());
+        $this->assertSame(FileExtension::STORED_IMAGE_EXTENSION, FileExtension::Jpg->storageImageExtension());
+        $this->assertSame(FileExtension::Gif, FileExtension::Gif->storageImageExtension());
     }
 
     #[Test]
-    public function unknown_mime_type_throws_value_error(): void
+    public function extension_resolves_content_type(): void
     {
-        $this->expectException(ValueError::class);
+        $contentTypes = [];
 
-        FileExtension::getByMimeType('application/unknown');
+        foreach (FileExtension::cases() as $fileExtension) {
+            $contentTypes[$fileExtension->value] = $fileExtension->contentType();
+        }
+
+        $this->assertSame([
+            '7z' => 'application/x-7z-compressed',
+            'apng' => 'image/apng',
+            'avi' => 'video/x-msvideo',
+            'avif' => 'image/avif',
+            'csv' => 'text/csv',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'flac' => 'audio/flac',
+            'gif' => 'image/gif',
+            'gz' => 'application/gzip',
+            'jfif' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'jpg' => 'image/jpeg',
+            'json' => 'application/json',
+            'm4a' => 'audio/mp4',
+            'mkv' => 'video/x-matroska',
+            'mov' => 'video/quicktime',
+            'mp3' => 'audio/mpeg',
+            'mp4' => 'video/mp4',
+            'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+            'odt' => 'application/vnd.oasis.opendocument.text',
+            'ogg' => 'audio/ogg',
+            'pdf' => 'application/pdf',
+            'pjpeg' => 'image/jpeg',
+            'pjp' => 'image/jpeg',
+            'png' => 'image/png',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'rar' => 'application/vnd.rar',
+            'rtf' => 'application/rtf',
+            'svg' => 'image/svg+xml',
+            'tar' => 'application/x-tar',
+            'txt' => 'text/plain',
+            'wav' => 'audio/wav',
+            'webm' => 'video/webm',
+            'webp' => 'image/webp',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'xml' => 'application/xml',
+            'zip' => 'application/zip',
+        ], $contentTypes);
+    }
+
+    #[Test]
+    public function extensions_can_be_filtered_by_storage_folder(): void
+    {
+        config(['laravel-files.accept_extensions' => [
+            FileExtension::Csv,
+            FileExtension::Jpg,
+            FileExtension::Png,
+        ]]);
+
+        $this->assertSame([FileExtension::Jpg, FileExtension::Png], FileExtension::acceptedExtensions(FileExtension::FOLDER_IMAGE));
+        $this->assertSame(config('laravel-files.accept_extensions'), FileExtension::acceptedExtensions());
     }
 
     #[Test]

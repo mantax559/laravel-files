@@ -7,6 +7,7 @@ namespace Mantax559\LaravelFiles\Tests\Feature;
 use Illuminate\Support\Facades\File;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Vips\Driver;
+use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Providers\AppServiceProvider;
 use Mantax559\LaravelFiles\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,6 +33,12 @@ final class AppServiceProviderTest extends TestCase
                 File::delete($published);
             }
         }
+    }
+
+    #[Test]
+    public function default_config_accepts_every_supported_file_extension(): void
+    {
+        $this->assertSame(FileExtension::cases(), config('laravel-files.accept_extensions'));
     }
 
     #[Test]

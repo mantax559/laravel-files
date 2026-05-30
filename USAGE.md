@@ -1,40 +1,24 @@
 ## Usage
 
-## Configuration
+## Validation
 
-Main config keys:
+Use the helper methods in form requests or controllers:
 
 ```php
 use Mantax559\LaravelFiles\Enums\FileExtension;
+use Mantax559\LaravelFiles\Helpers\FileValidationHelper;
 
-'table' => 'files',
-'disk' => 'local',
-'image_cache_disk' => 'public',
-'image_cache_quality' => 90,
-'max_file_size_bytes' => 24 * 1024 * 1024,
-'max_upload_file_size_bytes' => 48 * 1024 * 1024,
-'max_image_side_pixels' => 2048,
-'max_upload_image_side_pixels' => 8192,
-'accept_document_extensions' => [
-    FileExtension::Pdf,
-    FileExtension::Xlsx,
-],
+return [
+    'file' => FileValidationHelper::getFileRules(),
+    'document' => FileValidationHelper::getDocumentRules(mimes: [
+        FileExtension::Pdf,
+        'xlsx',
+    ]),
+    'image' => FileValidationHelper::getImageRules(maxWidth: 2048, maxHeight: 2048),
+];
 ```
 
-Accepted extensions are configured by file category:
-
-- `accept_archive_extensions`
-- `accept_audio_extensions`
-- `accept_document_extensions`
-- `accept_image_extensions`
-- `accept_video_extensions`
-- `accept_file_extensions`
-
-Each value should be a `FileExtension` enum case. If an extension is not present in the matching category list, uploads using that extension are rejected.
-
-Images are stored as `avif` by default when the source extension can be converted. The stored file path and the `extension` model value should use the final stored extension.
-
-## Validation
+Available validation helpers:
 
 ```php
 use Mantax559\LaravelFiles\Helpers\FileValidationHelper;
@@ -47,128 +31,123 @@ FileValidationHelper::getImageRules();
 FileValidationHelper::getVideoRules();
 ```
 
-Rules use the configured accepted extensions and upload size limits. Custom extensions can be passed per call:
+## Save One File
+
+Always save files inside `FileTransaction::run(...)` so uploaded files are rolled back when your database work fails.
 
 ```php
-use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Helpers\FileValidationHelper;
-
-FileValidationHelper::getDocumentRules(mimes: [
-    FileExtension::Pdf,
-    FileExtension::Xlsx,
-]);
-
-FileValidationHelper::getImageRules(width: 1024, height: 1024);
-FileValidationHelper::getImageRules(required: false, maxWidth: 2048, maxHeight: 2048);
-```
-
-`getFileRules()` allows all configured categories. Category-specific methods only allow extensions from that category.
-
-## Store Files
-
-```php
-use Mantax559\LaravelFiles\Services\FileService;
-
-$path = (new FileService)->save($request->file('file')->path(), 'products');
-```
-
-The returned `$path` is relative to `config('laravel-files.disk')`.
-
-Folder structure is derived from the detected `FileExtension`:
-
-- `archive/{folder}/{uuid}.{extension}`
-- `audio/{folder}/{uuid}.{extension}`
-- `document/{folder}/{uuid}.{extension}`
-- `image/{folder}/{uuid}.avif`
-- `video/{folder}/{uuid}.{extension}`
-- `file/{folder}/{uuid}.{extension}`
-
-When the source is configured as `FileSource::Seeder`, paths are prefixed with `seeder`:
-
-```php
-use Mantax559\LaravelFiles\Enums\FileSource;
-use Mantax559\LaravelFiles\Services\FileService;
-
-$path = (new FileService(FileSource::Seeder))->save($filePath, 'products');
-```
-
-Seeder storage removes the target folder before the first write for that folder during the service instance lifetime.
-
-## Cache Images
-
-```php
-use Mantax559\LaravelFiles\Services\FileService;
-
-$url = (new FileService)->cacheImage(
-    sourcePath: 'image/products/source.avif',
-    width: 300,
-    height: 300,
-    folder: 'products',
-);
-```
-
-Cached images are stored on `config('laravel-files.image_cache_disk')` under `cache/image/{folder}` and the method returns the public disk URL.
-
-Multiple cache sizes:
-
-```php
-use Mantax559\LaravelFiles\Services\FileService;
-
-$urls = (new FileService)->cacheImages('image/products/source.avif', [
-    ['width' => 300, 'height' => 300],
-    ['width' => 600, 'height' => 600],
-], 'products');
-```
-
-## Rollback Files
-
-Use `transactionWithFileRollback()` when database writes and file writes must succeed together:
-
-```php
-use Mantax559\LaravelFiles\Services\FileService;
-
-$fileService = new FileService;
-
-FileService::transactionWithFileRollback(function () use ($fileService, $request): void {
-    $path = $fileService->save($request->file('file')->path(), 'products');
-
-    Product::query()->create([
-        'file_path' => $path,
-    ]);
-}, $fileService);
-```
-
-If the callback throws, uploaded files are deleted and deleted files tracked by the service are restored.
-
-## File Model
-
-```php
-use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileSource;
 use Mantax559\LaravelFiles\Models\File;
+use Mantax559\LaravelFiles\Services\FileManager;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 
-File::query()->create([
-    'path' => $path,
-    'extension' => FileExtension::Avif,
-    'source' => FileSource::Manual,
-    'size' => 123456,
-]);
+$file = FileTransaction::run(function (FileTransaction $transaction) use ($request): File {
+    $fileManager = new FileManager;
+
+    return $fileManager->create(
+        $request->file('file')->path(),
+        'pages',
+        $transaction
+    );
+});
 ```
 
-`extension` and `source` are cast to enums. The table name is read from `config('laravel-files.table')`.
-
-## Enums
+## Save Multiple Files
 
 ```php
-use Mantax559\LaravelFiles\Enums\FileExtension;
-use Mantax559\LaravelFiles\Enums\FileSource;
+use Mantax559\LaravelFiles\Services\FileManager;
+use Mantax559\LaravelFiles\Services\FileTransaction;
 
-FileExtension::Jpg->folder();
-FileExtension::getByMimeType('image/jpeg');
-FileExtension::getArrayForSelect();
+$files = FileTransaction::run(function (FileTransaction $transaction) use ($request): array {
+    $fileManager = new FileManager;
 
-FileSource::Manual;
-FileSource::Seeder;
+    return $fileManager->create([
+        $request->file('files.0')->path(),
+        $request->file('files.1')->path(),
+        $request->file('files.2')->path(),
+    ], 'pages', $transaction);
+});
 ```
 
-`FileExtension::folder()` returns the storage category used by `FileService`.
+## Create One Model With Multiple Files
+
+```php
+use App\Models\Page;
+use Mantax559\LaravelFiles\Services\FileManager;
+use Mantax559\LaravelFiles\Services\FileTransaction;
+
+$page = FileTransaction::run(function (FileTransaction $transaction) use ($request): Page {
+    $fileManager = new FileManager;
+
+    $files = $fileManager->create([
+        $request->file('desktop_image')->path(),
+        $request->file('mobile_image')->path(),
+        $request->file('document')->path(),
+    ], 'pages', $transaction);
+
+    return Page::query()->create([
+        'title' => $request->input('title'),
+        'desktop_image_id' => $files[0]->getKey(),
+        'mobile_image_id' => $files[1]->getKey(),
+        'document_id' => $files[2]->getKey(),
+    ]);
+});
+```
+
+## Delete Files
+
+```php
+use Mantax559\LaravelFiles\Services\FileManager;
+use Mantax559\LaravelFiles\Services\FileTransaction;
+
+FileTransaction::run(function (FileTransaction $transaction) use ($page): void {
+    (new FileManager)->destroy([
+        $page->desktopImage,
+        $page->mobileImage,
+        $page->document,
+    ], $transaction);
+
+    $page->delete();
+});
+```
+
+## Open And Download
+
+```php
+use Mantax559\LaravelFiles\Services\FileManager;
+
+return FileManager::open($file);
+return FileManager::download($file);
+```
+
+## Cached Images
+
+Configure named sizes in `config/laravel-files.php`:
+
+```php
+'image_cache_sizes' => [
+    'thumbnail' => ['width' => 300, 'height' => 300],
+    'banner' => ['width' => 1200],
+],
+```
+
+Use the global helpers:
+
+```php
+cache_image($page->file->path, 'page', $page);
+email_image($page->file->path, 'page', $message, $page);
+email_image('image/logo.png', 'logo', $message);
+```
+
+When a cached image cannot be created, the package logs the failure and returns `config('laravel-files.default_image_cache_url')`.
+
+## Stored Paths
+
+Uploaded files are stored under folders resolved by `FileExtension`:
+
+```php
+document/invoices/{uuid}.pdf
+image/products/{uuid}.avif
+video/pages/{uuid}.mp4
+```
+
+Images are resized before storage. Convertible image formats are stored as `FileExtension::STORED_IMAGE_EXTENSION`; other image formats keep their original extension.

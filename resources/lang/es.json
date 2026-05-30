@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "No se pudo leer el archivo. Proporcione una ruta local o URL válida.",
-  "File does not exist: :path": "El archivo no existe: :path",
+  "The file model could not be deleted.": "No se pudo eliminar el modelo del archivo.",
+  "The file could not be read.": "No se pudo leer el archivo.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "No se pudo guardar el archivo. Contacte con soporte e indique el siguiente código: :error_code",
+  "The file model references a missing file.": "El modelo del archivo hace referencia a un archivo inexistente.",
+  "The file cache directory could not be deleted.": "No se pudo eliminar el directorio de caché del archivo.",
   "The file could not be opened. Please try uploading it again.": "No se pudo abrir el archivo. Intente subirlo de nuevo.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "El archivo subido es demasiado grande. Tamaño máximo permitido: :max_size, tamaño real: :actual_size.",
   "The file extension could not be detected.": "No se pudo detectar la extensión del archivo.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "El tipo MIME detectado :mime no es compatible. Formatos aceptados: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "El formato de archivo :extension no está permitido. Formatos :folder aceptados: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "La extensión de archivo :extension no es compatible. Formatos aceptados: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "El formato de archivo :extension no está permitido. Formatos :folder aceptados: :extensions.",
   "The uploaded file is not a valid image.": "El archivo subido no es una imagen válida.",
-  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La resolución de la imagen es demasiado grande. Lado máximo permitido: :max_sidepx, resolución real: :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "El archivo guardado es demasiado grande. Tamaño máximo permitido: :max_size, tamaño real: :actual_size."
+  "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "La resolución de la imagen es demasiado grande. El lado máximo permitido es :max_sidepx, la resolución real es :widthx:heightpx.",
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "El archivo es demasiado grande. Tamaño máximo permitido: :max_size, tamaño real: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Las subidas de archivos no están configuradas. Contacte con el administrador del sistema.",
+  "The file could not be moved to rollback storage.": "No se pudo mover el archivo al almacenamiento de reversión.",
+  "The file could not be restored from rollback storage.": "No se pudo restaurar el archivo desde el almacenamiento de reversión.",
+  "The file could not be deleted.": "No se pudo eliminar el archivo.",
+  "The file directory could not be deleted.": "No se pudo eliminar el directorio del archivo."
 }

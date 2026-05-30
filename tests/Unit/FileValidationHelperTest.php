@@ -14,14 +14,14 @@ final class FileValidationHelperTest extends TestCase
     #[Test]
     public function file_rules_use_all_configured_extensions_by_default(): void
     {
-        config([
-            'laravel-files.accept_archive_extensions' => [FileExtension::Zip],
-            'laravel-files.accept_audio_extensions' => [FileExtension::Mp3],
-            'laravel-files.accept_document_extensions' => [FileExtension::Pdf],
-            'laravel-files.accept_image_extensions' => [FileExtension::Jpg],
-            'laravel-files.accept_video_extensions' => [FileExtension::Mp4],
-            'laravel-files.accept_file_extensions' => [FileExtension::Json],
-        ]);
+        config(['laravel-files.accept_extensions' => [
+            FileExtension::Zip,
+            FileExtension::Mp3,
+            FileExtension::Pdf,
+            FileExtension::Jpg,
+            FileExtension::Mp4,
+            FileExtension::Json,
+        ]]);
 
         $this->assertSame([
             'required',
@@ -34,12 +34,14 @@ final class FileValidationHelperTest extends TestCase
     #[Test]
     public function category_rules_use_their_configured_extensions(): void
     {
-        config([
-            'laravel-files.accept_archive_extensions' => [FileExtension::Zip],
-            'laravel-files.accept_audio_extensions' => [FileExtension::Mp3],
-            'laravel-files.accept_document_extensions' => [FileExtension::Pdf],
-            'laravel-files.accept_video_extensions' => [FileExtension::Mp4],
-        ]);
+        config(['laravel-files.accept_extensions' => [
+            FileExtension::Zip,
+            FileExtension::Mp3,
+            FileExtension::Pdf,
+            FileExtension::Jpg,
+            FileExtension::Mp4,
+            FileExtension::Json,
+        ]]);
 
         $this->assertSame(['required', 'file', 'max:49152', 'mimes:zip'], FileValidationHelper::getArchiveRules());
         $this->assertSame(['required', 'file', 'max:49152', 'mimes:mp3'], FileValidationHelper::getAudioRules());
@@ -50,7 +52,7 @@ final class FileValidationHelperTest extends TestCase
     #[Test]
     public function image_rules_include_dimensions_and_configured_extensions(): void
     {
-        config(['laravel-files.accept_image_extensions' => [FileExtension::Jpg]]);
+        config(['laravel-files.accept_extensions' => [FileExtension::Csv, FileExtension::Jpg]]);
 
         $this->assertSame([
             'required',

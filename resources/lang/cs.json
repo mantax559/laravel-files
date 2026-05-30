@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Soubor se nepodařilo přečíst. Zadejte platnou místní cestu nebo URL.",
-  "File does not exist: :path": "Soubor neexistuje: :path",
+  "The file model could not be deleted.": "Model souboru se nepodařilo odstranit.",
+  "The file could not be read.": "Soubor se nepodařilo přečíst.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Soubor se nepodařilo uložit. Kontaktujte podporu s následujícím kódem: :error_code",
+  "The file model references a missing file.": "Model souboru odkazuje na chybějící soubor.",
+  "The file cache directory could not be deleted.": "Adresář mezipaměti souboru se nepodařilo odstranit.",
   "The file could not be opened. Please try uploading it again.": "Soubor se nepodařilo otevřít. Zkuste jej nahrát znovu.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Nahraný soubor je příliš velký. Maximální povolená velikost je :max_size, skutečná velikost je :actual_size.",
   "The file extension could not be detected.": "Příponu souboru se nepodařilo zjistit.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Zjištěný typ MIME :mime není podporován. Přijímané formáty: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Formát souboru :extension není povolen. Přijímané formáty :folder: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Přípona souboru :extension není podporována. Přijímané formáty: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Formát souboru :extension není povolen. Přijímané formáty :folder: :extensions.",
   "The uploaded file is not a valid image.": "Nahraný soubor není platný obrázek.",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Rozlišení obrázku je příliš velké. Maximální povolená strana je :max_sidepx, skutečné rozlišení je :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Uložený soubor je příliš velký. Maximální povolená velikost je :max_size, skutečná velikost je :actual_size."
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Soubor je příliš velký. Maximální povolená velikost: :max_size, skutečná velikost: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Nahrávání souborů není nakonfigurováno. Kontaktujte správce systému.",
+  "The file could not be moved to rollback storage.": "Soubor se nepodařilo přesunout do úložiště pro vrácení změn.",
+  "The file could not be restored from rollback storage.": "Soubor se nepodařilo obnovit z úložiště pro vrácení změn.",
+  "The file could not be deleted.": "Soubor se nepodařilo odstranit.",
+  "The file directory could not be deleted.": "Adresář souboru se nepodařilo odstranit."
 }

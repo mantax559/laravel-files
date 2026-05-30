@@ -1,13 +1,19 @@
 {
-  "The file could not be read. Provide a valid local path or URL.": "Nie udało się odczytać pliku. Podaj prawidłową ścieżkę lokalną lub URL.",
-  "File does not exist: :path": "Plik nie istnieje: :path",
+  "The file model could not be deleted.": "Nie udało się usunąć modelu pliku.",
+  "The file could not be read.": "Nie udało się odczytać pliku.",
+  "The file could not be stored. Please contact support with the following code: :error_code": "Nie udało się zapisać pliku. Skontaktuj się z pomocą techniczną, podając kod: :error_code",
+  "The file model references a missing file.": "Model pliku wskazuje na brakujący plik.",
+  "The file cache directory could not be deleted.": "Nie udało się usunąć katalogu pamięci podręcznej pliku.",
   "The file could not be opened. Please try uploading it again.": "Nie udało się otworzyć pliku. Spróbuj przesłać go ponownie.",
-  "The uploaded file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Przesłany plik jest zbyt duży. Maksymalny dozwolony rozmiar to :max_size, rzeczywisty rozmiar to :actual_size.",
   "The file extension could not be detected.": "Nie udało się wykryć rozszerzenia pliku.",
-  "The detected MIME type :mime is not supported. Accepted formats: :extensions.": "Wykryty typ MIME :mime nie jest obsługiwany. Akceptowane formaty: :extensions.",
-  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Format pliku :extension jest niedozwolony. Akceptowane formaty :folder: :extensions.",
   "The :extension file extension is not supported. Accepted formats: :extensions.": "Rozszerzenie pliku :extension nie jest obsługiwane. Akceptowane formaty: :extensions.",
+  "The :extension file format is not allowed. Accepted :folder formats: :extensions.": "Format pliku :extension jest niedozwolony. Akceptowane formaty :folder: :extensions.",
   "The uploaded file is not a valid image.": "Przesłany plik nie jest prawidłowym obrazem.",
   "The image resolution is too large. Maximum allowed side is :max_sidepx, actual resolution is :widthx:heightpx.": "Rozdzielczość obrazu jest zbyt duża. Maksymalny dozwolony bok to :max_sidepx, rzeczywista rozdzielczość to :widthx:heightpx.",
-  "The stored file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Zapisany plik jest zbyt duży. Maksymalny dozwolony rozmiar to :max_size, rzeczywisty rozmiar to :actual_size."
+  "The file is too large. Maximum allowed size is :max_size, actual size is :actual_size.": "Plik jest zbyt duży. Maksymalny dozwolony rozmiar: :max_size, rzeczywisty rozmiar: :actual_size.",
+  "File uploads are not configured. Please contact the system administrator.": "Przesyłanie plików nie jest skonfigurowane. Skontaktuj się z administratorem systemu.",
+  "The file could not be moved to rollback storage.": "Nie udało się przenieść pliku do magazynu wycofywania zmian.",
+  "The file could not be restored from rollback storage.": "Nie udało się przywrócić pliku z magazynu wycofywania zmian.",
+  "The file could not be deleted.": "Nie udało się usunąć pliku.",
+  "The file directory could not be deleted.": "Nie udało się usunąć katalogu pliku."
 }
