@@ -20,8 +20,8 @@
   },
   "require-dev": {
     "laravel/pint": "^1.0",
-    "mantax559/laravel-blade-attribute-sorter": "^1.0",
-    "orchestra/testbench": "^11.0"
+    "orchestra/testbench": "^11.0",
+    "mantax559/laravel-blade-attribute-sorter": "^1.0"
   },
   "suggest": {
     "ext-ffi": "required for libvips image processing",

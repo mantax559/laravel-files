@@ -7,10 +7,12 @@ namespace Mantax559\LaravelFiles\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Mantax559\LaravelFiles\Enums\FileExtension;
+use Mantax559\LaravelObservability\Traits\ActivityTrait;
 
 class File extends Model
 {
     use HasUuids;
+    use ActivityTrait;
 
     protected $fillable = [
         'path',
