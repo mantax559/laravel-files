@@ -12,7 +12,7 @@ return [
     'file' => FileValidationHelper::getFileRules(),
     'document' => FileValidationHelper::getDocumentRules(mimes: [
         FileExtension::Pdf,
-        FileExtension::Xlsx,
+        'xlsx,
     ]),
     'image' => FileValidationHelper::getImageRules(maxWidth: 2048, maxHeight: 2048),
 ];
@@ -58,27 +58,6 @@ $files = FileTransaction::run(fn (FileTransaction $transaction): array => (new F
     $request->file('files.1')->path(),
     $request->file('files.2')->path(),
 ], 'pages', $transaction));
-```
-
-## Create Model With File
-
-```php
-use App\Models\Page;
-use Mantax559\LaravelFiles\Services\FileManager;
-use Mantax559\LaravelFiles\Services\FileTransaction;
-
-$page = FileTransaction::run(function (FileTransaction $transaction) use ($request): Page {
-    $file = (new FileManager)->create(
-        $request->file('file')->path(),
-        'pages',
-        $transaction
-    );
-
-    return Page::query()->create([
-        'title' => $request->input('title'),
-        'file_id' => $file->getKey(),
-    ]);
-});
 ```
 
 ## Create Multiple Models With Files
@@ -145,8 +124,9 @@ Configure named sizes in `config/laravel-files.php`:
 Use the global helpers:
 
 ```php
-cache_image($file->path, 'thumbnail', $file->getKey());
-email_image($file->path, 'thumbnail', $message, $file->getKey());
+cache_image($page->file->path, 'page', $page);
+email_image($page->file->path, 'page', $message, $page);
+email_image('image/logo.png', 'logo', $message);
 ```
 
 When a cached image cannot be created, the package logs the failure and returns `config('laravel-files.default_image_cache_url')`.
