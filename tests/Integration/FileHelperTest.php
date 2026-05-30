@@ -98,6 +98,23 @@ final class FileHelperTest extends TestCase
     }
 
     #[Test]
+    public function email_image_helper_returns_cache_url_for_public_application_url(): void
+    {
+        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        $this->mockImageFacade()
+            ->shouldReceive('decodePath')
+            ->once()
+            ->andReturn(new FakeImage(encodedContents: 'cached'));
+        $message = Mockery::mock(Message::class);
+        $message->shouldNotReceive('embed');
+
+        $this->assertStringContainsString(
+            'cache/image/products/source-10x20.avif',
+            email_image('image/products/source.jpg', 'thumbnail', $message, 'products')
+        );
+    }
+
+    #[Test]
     public function email_image_returns_cache_url_when_application_url_has_no_host(): void
     {
         config(['app.url' => 'invalid-url']);
