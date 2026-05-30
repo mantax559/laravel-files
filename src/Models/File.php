@@ -11,8 +11,8 @@ use Mantax559\LaravelObservability\Traits\ActivityTrait;
 
 class File extends Model
 {
-    use HasUuids;
     use ActivityTrait;
+    use HasUuids;
 
     protected $fillable = [
         'path',
