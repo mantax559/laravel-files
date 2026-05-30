@@ -12,7 +12,7 @@ return [
     'file' => FileValidationHelper::getFileRules(),
     'document' => FileValidationHelper::getDocumentRules(mimes: [
         FileExtension::Pdf,
-        'xlsx,
+        'xlsx',
     ]),
     'image' => FileValidationHelper::getImageRules(maxWidth: 2048, maxHeight: 2048),
 ];
@@ -40,11 +40,15 @@ use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
 
-$file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
-    $request->file('file')->path(),
-    'pages',
-    $transaction
-));
+$file = FileTransaction::run(function (FileTransaction $transaction) use ($request): File {
+    $fileManager = new FileManager;
+
+    return $fileManager->create(
+        $request->file('file')->path(),
+        'pages',
+        $transaction
+    );
+});
 ```
 
 ## Save Multiple Files
@@ -53,38 +57,39 @@ $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new Fil
 use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
 
-$files = FileTransaction::run(fn (FileTransaction $transaction): array => (new FileManager)->create([
-    $request->file('files.0')->path(),
-    $request->file('files.1')->path(),
-    $request->file('files.2')->path(),
-], 'pages', $transaction));
+$files = FileTransaction::run(function (FileTransaction $transaction) use ($request): array {
+    $fileManager = new FileManager;
+
+    return $fileManager->create([
+        $request->file('files.0')->path(),
+        $request->file('files.1')->path(),
+        $request->file('files.2')->path(),
+    ], 'pages', $transaction);
+});
 ```
 
-## Create Multiple Models With Files
+## Create One Model With Multiple Files
 
 ```php
 use App\Models\Page;
 use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
 
-$pages = FileTransaction::run(function (FileTransaction $transaction) use ($request): array {
+$page = FileTransaction::run(function (FileTransaction $transaction) use ($request): Page {
     $fileManager = new FileManager;
-    $pages = [];
 
-    foreach ($request->file('files') as $index => $uploadedFile) {
-        $file = $fileManager->create(
-            $uploadedFile->path(),
-            'pages',
-            $transaction
-        );
+    $files = $fileManager->create([
+        $request->file('desktop_image')->path(),
+        $request->file('mobile_image')->path(),
+        $request->file('document')->path(),
+    ], 'pages', $transaction);
 
-        $pages[] = Page::query()->create([
-            'title' => $request->input("pages.$index.title"),
-            'file_id' => $file->getKey(),
-        ]);
-    }
-
-    return $pages;
+    return Page::query()->create([
+        'title' => $request->input('title'),
+        'desktop_image_id' => $files[0]->getKey(),
+        'mobile_image_id' => $files[1]->getKey(),
+        'document_id' => $files[2]->getKey(),
+    ]);
 });
 ```
 
@@ -95,7 +100,11 @@ use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelFiles\Services\FileTransaction;
 
 FileTransaction::run(function (FileTransaction $transaction) use ($page): void {
-    (new FileManager)->destroy($page->file, $transaction);
+    (new FileManager)->destroy([
+        $page->desktopImage,
+        $page->mobileImage,
+        $page->document,
+    ], $transaction);
 
     $page->delete();
 });
@@ -106,8 +115,8 @@ FileTransaction::run(function (FileTransaction $transaction) use ($page): void {
 ```php
 use Mantax559\LaravelFiles\Services\FileManager;
 
-return FileManager::open($file->path, 'application/pdf');
-return FileManager::download($file->path);
+return FileManager::open($file);
+return FileManager::download($file);
 ```
 
 ## Cached Images

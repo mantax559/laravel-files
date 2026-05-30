@@ -110,6 +110,52 @@ enum FileExtension: string
         };
     }
 
+    public function contentType(): string
+    {
+        return match ($this) {
+            self::SevenZip => 'application/x-7z-compressed',
+            self::Apng => 'image/apng',
+            self::Avi => 'video/x-msvideo',
+            self::Avif => 'image/avif',
+            self::Csv => 'text/csv',
+            self::Doc => 'application/msword',
+            self::Docx => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            self::Flac => 'audio/flac',
+            self::Gif => 'image/gif',
+            self::Gz => 'application/gzip',
+            self::Jfif,
+            self::Jpeg,
+            self::Jpg,
+            self::Pjp,
+            self::Pjpeg => 'image/jpeg',
+            self::Json => 'application/json',
+            self::M4a => 'audio/mp4',
+            self::Mkv => 'video/x-matroska',
+            self::Mov => 'video/quicktime',
+            self::Mp3 => 'audio/mpeg',
+            self::Mp4 => 'video/mp4',
+            self::Ods => 'application/vnd.oasis.opendocument.spreadsheet',
+            self::Odt => 'application/vnd.oasis.opendocument.text',
+            self::Ogg => 'audio/ogg',
+            self::Pdf => 'application/pdf',
+            self::Png => 'image/png',
+            self::Ppt => 'application/vnd.ms-powerpoint',
+            self::Pptx => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            self::Rar => 'application/vnd.rar',
+            self::Rtf => 'application/rtf',
+            self::Svg => 'image/svg+xml',
+            self::Tar => 'application/x-tar',
+            self::Txt => 'text/plain',
+            self::Wav => 'audio/wav',
+            self::Webm => 'video/webm',
+            self::Webp => 'image/webp',
+            self::Xls => 'application/vnd.ms-excel',
+            self::Xlsx => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            self::Xml => 'application/xml',
+            self::Zip => 'application/zip',
+        };
+    }
+
     public function isImage(): bool
     {
         return cmprstr($this->folder(), self::FOLDER_IMAGE);

@@ -161,14 +161,14 @@ class FileManager
         return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
     }
 
-    public static function open(string $filePath, string $headerContentType): BinaryFileResponse
+    public static function open(File $file): BinaryFileResponse
     {
-        return response()->file(FileStorage::disk(config('laravel-files.disk'))->path($filePath), ['Content-Type' => $headerContentType]);
+        return response()->file(FileStorage::disk(config('laravel-files.disk'))->path($file->path), ['Content-Type' => $file->extension->contentType()]);
     }
 
-    public static function download(string $filePath): BinaryFileResponse
+    public static function download(File $file): BinaryFileResponse
     {
-        return response()->download(FileStorage::disk(config('laravel-files.disk'))->path($filePath));
+        return response()->download(FileStorage::disk(config('laravel-files.disk'))->path($file->path));
     }
 
     private function deleteFiles(File $file, FileTransaction $transaction): void

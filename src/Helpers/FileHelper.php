@@ -21,8 +21,7 @@ final class FileHelper
         string $sourcePath,
         string $size,
         string|int|array|Model|null $folderSource = null
-    ): string
-    {
+    ): string {
         [$width, $height] = self::imageCacheSize($sourcePath, $size);
 
         return FileManager::cacheImage(
@@ -38,8 +37,7 @@ final class FileHelper
         string $size,
         Message $message,
         string|int|array|Model|null $folderSource = null
-    ): string
-    {
+    ): string {
         $url = self::cacheImage($sourcePath, $size, $folderSource);
 
         if (self::isLocalhostUrl()) {

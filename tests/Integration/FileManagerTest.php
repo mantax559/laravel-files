@@ -18,7 +18,6 @@ use Mantax559\LaravelHelpers\Exceptions\UserFriendlyException;
 use Mockery;
 use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionMethod;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -400,42 +399,41 @@ final class FileManagerTest extends TestCase
     #[Test]
     public function open_and_download_return_binary_file_responses(): void
     {
-        Storage::disk('local')->put('document/invoices/file.pdf', 'contents');
+        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
 
-        $this->assertInstanceOf(BinaryFileResponse::class, FileManager::open('document/invoices/file.pdf', 'application/pdf'));
-        $this->assertInstanceOf(BinaryFileResponse::class, FileManager::download('document/invoices/file.pdf'));
+        $openResponse = FileManager::open($file);
+
+        $this->assertInstanceOf(BinaryFileResponse::class, $openResponse);
+        $this->assertSame('application/pdf', $openResponse->headers->get('content-type'));
+        $this->assertInstanceOf(BinaryFileResponse::class, FileManager::download($file));
     }
 
     #[Test]
-    public function private_extension_and_image_validation_errors_are_user_friendly(): void
+    public function create_reports_extension_read_and_image_validation_errors(): void
     {
-        $fileExtension = new ReflectionMethod(FileManager::class, 'getFileExtension');
-        $imageDimensions = new ReflectionMethod(FileManager::class, 'ensureUploadImageDimensions');
-        $readFileContents = new ReflectionMethod(FileManager::class, 'readFileContents');
-
         try {
-            $readFileContents->invoke(null, 'missing.pdf');
+            (new FileManager)->create('http://127.0.0.1:9/missing.pdf', 'Files', new FileTransaction);
             $this->fail('Expected file open exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The file could not be opened. Please try uploading it again.', $exception->getMessage());
         }
 
         try {
-            $fileExtension->invoke(null, $this->temporaryFile('test', 'exe'));
+            (new FileManager)->create($this->temporaryFile('test', 'exe'), 'Files', new FileTransaction);
             $this->fail('Expected unsupported extension exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertStringContainsString('not supported', $exception->getMessage());
         }
 
         try {
-            $fileExtension->invoke(null, 'file');
+            (new FileManager)->create($this->temporaryFile('test', ''), 'Files', new FileTransaction);
             $this->fail('Expected extension detection exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The file extension could not be detected.', $exception->getMessage());
         }
 
         try {
-            $imageDimensions->invoke(null, 'not-image');
+            (new FileManager)->create($this->temporaryFile('not-image', 'jpg'), 'Images', new FileTransaction);
             $this->fail('Expected image exception.');
         } catch (UserFriendlyException $exception) {
             $this->assertSame('The uploaded file is not a valid image.', $exception->getMessage());
@@ -446,14 +444,11 @@ final class FileManagerTest extends TestCase
         $this->expectException(UserFriendlyException::class);
         $this->expectExceptionMessage('1x1px');
 
-        $imageDimensions->invoke(
-            null,
-            base64_decode(self::PNG_CONTENTS)
-        );
+        (new FileManager)->create($this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'), 'Images', new FileTransaction);
     }
 
     #[Test]
-    public function private_accepted_extensions_text_fails_when_uploads_are_not_configured(): void
+    public function create_fails_when_uploads_are_not_configured(): void
     {
         config(['laravel-files.accept_extensions' => []]);
 
@@ -464,9 +459,8 @@ final class FileManagerTest extends TestCase
     }
 
     #[Test]
-    public function private_prepare_image_for_storage_scales_wide_and_tall_images(): void
+    public function create_scales_wide_and_tall_images_before_storage(): void
     {
-        $prepare = new ReflectionMethod(FileManager::class, 'prepareImageForStorage');
         config(['laravel-files.max_image_side_pixels' => 100]);
 
         $this->mockImageFacade()
@@ -474,14 +468,26 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(300, 100, 'wide'));
 
-        $this->assertSame('wide-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS), FileExtension::STORED_IMAGE_EXTENSION));
+        $wideFile = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
+            $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'),
+            'Images',
+            $transaction
+        ));
+
+        $this->assertSame('wide-avif-90', Storage::disk('local')->get($wideFile->path));
 
         $this->mockImageFacade()
             ->shouldReceive('decodeBinary')
             ->once()
             ->andReturn(new FakeImage(100, 300, 'tall'));
 
-        $this->assertSame('tall-avif-90', $prepare->invoke(null, base64_decode(self::PNG_CONTENTS), FileExtension::STORED_IMAGE_EXTENSION));
+        $tallFile = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
+            $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'),
+            'Images',
+            $transaction
+        ));
+
+        $this->assertSame('tall-avif-90', Storage::disk('local')->get($tallFile->path));
     }
 
     private function createStoredFile(string $path, string $contents): File
@@ -502,13 +508,18 @@ final class FileManagerTest extends TestCase
 
     private function temporaryFile(string $contents, string $extension): string
     {
+        if (empty($extension)) {
+            $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'laravel-files-test-'.str_replace('.', '', uniqid('', true));
+            file_put_contents($path, $contents);
+
+            return $path;
+        }
+
         $path = tempnam(sys_get_temp_dir(), 'laravel-files-test-');
 
-        if (! empty($extension)) {
-            $extensionPath = $path.'.'.$extension;
-            rename($path, $extensionPath);
-            $path = $extensionPath;
-        }
+        $extensionPath = $path.'.'.$extension;
+        rename($path, $extensionPath);
+        $path = $extensionPath;
 
         file_put_contents($path, $contents);
 
