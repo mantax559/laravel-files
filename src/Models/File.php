@@ -7,6 +7,7 @@ namespace Mantax559\LaravelFiles\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Mantax559\LaravelFiles\Enums\FileExtension;
+use Mantax559\LaravelFiles\Services\FileStorage;
 use Mantax559\LaravelObservability\Traits\ActivityTrait;
 
 class File extends Model
@@ -15,7 +16,7 @@ class File extends Model
     use HasUuids;
 
     protected $fillable = [
-        'path',
+        'folder',
         'extension',
         'size',
     ];
@@ -31,5 +32,10 @@ class File extends Model
         parent::__construct($attributes);
 
         $this->setTable(config('laravel-files.table'));
+    }
+
+    public function getPathAttribute(): string
+    {
+        return FileStorage::path($this->folder, $this->getKey().'.'.$this->extension->value);
     }
 }

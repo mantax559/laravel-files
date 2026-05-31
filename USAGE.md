@@ -133,8 +133,8 @@ Configure named sizes in `config/laravel-files.php`:
 Use the global helpers:
 
 ```php
-cache_image($page->file->path, 'page', $page);
-email_image($page->file->path, 'page', $message, $page);
+cache_image($page->file, 'page');
+email_image($page->file, 'page', $message);
 email_image('image/logo.png', 'logo', $message);
 ```
 
@@ -142,12 +142,22 @@ When a cached image cannot be created, the package logs the failure and returns 
 
 ## Stored Paths
 
-Uploaded files are stored under folders resolved by `FileExtension`:
 
 ```php
-document/invoices/{uuid}.pdf
-image/products/{uuid}.avif
-video/pages/{uuid}.mp4
+document/invoices/{id}.pdf
+image/pages/{page_id}/{id}.avif
 ```
 
-Images are resized before storage. Convertible image formats are stored as `FileExtension::STORED_IMAGE_EXTENSION`; other image formats keep their original extension.
+Cache copies the same folder structure and adds `cache/` plus a size file inside the `{id}` folder:
+
+```php
+cache/{folder}/{id}/{width}x{height}.avif
+```
+
+Example:
+
+```php
+cache/image/pages/{page_id}/{id}/300x300.avif
+```
+
+Images are resized before storage. Convertible formats are saved as `FileExtension::STORED_IMAGE_EXTENSION`; other formats keep their original extension.

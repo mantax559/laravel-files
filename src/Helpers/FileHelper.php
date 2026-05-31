@@ -21,7 +21,7 @@ final class FileHelper
         string|File $source,
         string $size
     ): string {
-        $sourcePath = self::sourcePath($source);
+        $sourcePath = $source instanceof File ? $source->path : $source;
         [$width, $height] = self::imageCacheSize($sourcePath, $size);
 
         return FileManager::cacheImage(
@@ -64,15 +64,6 @@ final class FileHelper
             config('laravel-files.image_cache_sizes')[$size]['width'] ?? null,
             config('laravel-files.image_cache_sizes')[$size]['height'] ?? null,
         ];
-    }
-
-    private static function sourcePath(string|File $source): string
-    {
-        if ($source instanceof File) {
-            return $source->path;
-        }
-
-        return $source;
     }
 
     private static function isLocalhostUrl(): bool

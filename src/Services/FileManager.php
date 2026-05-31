@@ -29,13 +29,13 @@ class FileManager
     public function create(string|UploadedFile|array $files, string|int|array|Model $folderSource, FileTransaction $transaction): File|array
     {
         if (! is_array($files)) {
-            return File::create($this->save($files, $folderSource, $transaction));
+            return $this->store($files, $folderSource, $transaction);
         }
 
         $models = [];
 
         foreach ($files as $file) {
-            $models[] = File::create($this->save($file, $folderSource, $transaction));
+            $models[] = $this->store($file, $folderSource, $transaction);
         }
 
         return $models;
@@ -52,7 +52,7 @@ class FileManager
         }
     }
 
-    private function save(string|UploadedFile $file, string|int|array|Model $folderSource, FileTransaction $transaction): array
+    private function store(string|UploadedFile $file, string|int|array|Model $folderSource, FileTransaction $transaction): File
     {
         $readPath = self::getReadPath($file);
 
@@ -74,9 +74,9 @@ class FileManager
 
         self::ensureFileSize($fileContents, config('laravel-files.max_file_size_bytes'));
 
-        $filePath = self::filePath($fileExtension, $folderSource);
+        $fileModel = self::fileModel($fileExtension, $folderSource, strlen($fileContents));
 
-        $errorCode = FileStorage::save(config('laravel-files.disk'), $filePath, $fileContents);
+        $errorCode = FileStorage::save(config('laravel-files.disk'), $fileModel->path, $fileContents);
 
         if (! empty($errorCode)) {
             throw new UserFriendlyException(__(
@@ -85,13 +85,13 @@ class FileManager
             ));
         }
 
-        $transaction->addUploaded($filePath);
+        $transaction->addUploaded($fileModel->path);
 
-        return [
-            'path' => $filePath,
-            'extension' => $fileExtension,
-            'size' => strlen($fileContents),
-        ];
+        if (! $fileModel->save()) {
+            throw new RuntimeException(__('The file model could not be saved.'));
+        }
+
+        return $fileModel;
     }
 
     public static function cacheImage(
@@ -192,12 +192,23 @@ class FileManager
         }
     }
 
-    private static function filePath(FileExtension $fileExtension, string|int|array|Model $folderSource): string
+    private static function fileModel(FileExtension $fileExtension, string|int|array|Model $folderSource, int $size): File
+    {
+        $file = new File([
+            'folder' => self::folder($fileExtension, $folderSource),
+            'extension' => $fileExtension,
+            'size' => $size,
+        ]);
+        $file->id = Str::uuid7()->toString();
+
+        return $file;
+    }
+
+    private static function folder(FileExtension $fileExtension, string|int|array|Model $folderSource): string
     {
         return FileStorage::path(...array_merge(
             [$fileExtension->folder()],
-            self::folderParts($folderSource),
-            [Str::uuid7()->toString().'.'.$fileExtension->value]
+            self::folderParts($folderSource)
         ));
     }
 

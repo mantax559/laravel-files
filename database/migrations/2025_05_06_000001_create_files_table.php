@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create(config('laravel-files.table'), function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('path')->unique();
+            $table->string('folder');
             $table->string('extension');
             $table->unsignedBigInteger('size');
             $table->timestamp('created_at')->useCurrent();

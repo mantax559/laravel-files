@@ -6,6 +6,7 @@ namespace Mantax559\LaravelFiles\Tests\Integration;
 
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Mantax559\LaravelFiles\Enums\FileExtension;
@@ -78,6 +79,53 @@ final class FileManagerTest extends TestCase
     }
 
     #[Test]
+    public function create_uses_uploaded_file_original_extension(): void
+    {
+        $this->mockImageFacade()
+            ->shouldReceive('decodeBinary')
+            ->once()
+            ->andReturn(new FakeImage(encodedContents: 'stored-image'));
+
+        $uploadedFile = new UploadedFile(
+            $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'tmp'),
+            'product.png',
+            'image/png',
+            null,
+            true
+        );
+
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
+            $uploadedFile,
+            'Products',
+            $transaction
+        ));
+
+        $this->assertStringStartsWith('image/products/', $file->path);
+        $this->assertStringEndsWith('.avif', $file->path);
+        $this->assertSame('stored-image-avif-90', Storage::disk('local')->get($file->path));
+    }
+
+    #[Test]
+    public function create_can_store_files_inside_model_folder(): void
+    {
+        $this->mockImageFacade()
+            ->shouldReceive('decodeBinary')
+            ->once()
+            ->andReturn(new FakeImage(encodedContents: 'stored-image'));
+        $folderModel = new File;
+        $folderModel->forceFill(['id' => 'owner-id']);
+
+        $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
+            $this->temporaryFile(base64_decode(self::PNG_CONTENTS), 'png'),
+            $folderModel,
+            $transaction
+        ));
+
+        $this->assertStringStartsWith('image/files/owner-id/', $file->path);
+        $this->assertStringEndsWith('.avif', $file->path);
+    }
+
+    #[Test]
     public function create_keeps_non_convertible_files_in_their_folder(): void
     {
         $file = FileTransaction::run(fn (FileTransaction $transaction): File => (new FileManager)->create(
@@ -91,7 +139,7 @@ final class FileManagerTest extends TestCase
         $this->assertSame('%PDF-1.4', Storage::disk('local')->get($file->path));
         $this->assertDatabaseHas(config('laravel-files.table'), [
             'id' => $file->getKey(),
-            'path' => $file->path,
+            'folder' => $file->folder,
         ]);
     }
 
@@ -185,10 +233,10 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $firstUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products');
-        $secondUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products');
+        $firstUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20);
+        $secondUrl = FileManager::cacheImage('image/products/source.jpg', 10, 20);
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-10x20.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source/10x20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
     }
 
@@ -201,10 +249,10 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        $firstUrl = FileManager::cacheImage('image/products/source.jpg', null, 20, 'Products');
-        $secondUrl = FileManager::cacheImage('image/products/source.jpg', null, 20, 'Products');
+        $firstUrl = FileManager::cacheImage('image/products/source.jpg', null, 20);
+        $secondUrl = FileManager::cacheImage('image/products/source.jpg', null, 20);
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autox20.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source/autox20.avif'));
         $this->assertSame($firstUrl, $secondUrl);
     }
 
@@ -217,9 +265,9 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(640, 480, 'cached'));
 
-        FileManager::cacheImage('image/products/source.jpg', null, null, 'Products');
+        FileManager::cacheImage('image/products/source.jpg');
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autoxauto.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source/autoxauto.avif'));
     }
 
     #[Test]
@@ -231,9 +279,9 @@ final class FileManagerTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
 
-        FileManager::cacheImage('image/products/source.jpg', 20, null, 'Products');
+        FileManager::cacheImage('image/products/source.jpg', 20);
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-20xauto.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source/20xauto.avif'));
     }
 
     #[Test]
@@ -247,7 +295,7 @@ final class FileManagerTest extends TestCase
 
         $this->assertSame(
             asset(config('laravel-files.default_image_cache_url')),
-            FileManager::cacheImage('image/products/source.jpg', 10, 20, 'Products')
+            FileManager::cacheImage('image/products/source.jpg', 10, 20)
         );
     }
 
@@ -303,15 +351,15 @@ final class FileManagerTest extends TestCase
     #[Test]
     public function destroy_deletes_source_file_cache_directory_and_model(): void
     {
-        $file = $this->createStoredFile('document/invoices/file.pdf', 'contents');
-        Storage::disk('public')->put('cache/image/'.$file->getKey().'/thumb.jpg', 'cache');
+        $file = $this->createStoredFile('image/invoices/file.avif', 'contents');
+        Storage::disk('public')->put('cache/image/invoices/file/thumb.jpg', 'cache');
 
         FileTransaction::run(function (FileTransaction $transaction) use ($file): void {
             (new FileManager)->destroy($file, $transaction);
         });
 
-        $this->assertFalse(Storage::disk('local')->exists('document/invoices/file.pdf'));
-        $this->assertFalse(Storage::disk('public')->exists('cache/image/'.$file->getKey().'/thumb.jpg'));
+        $this->assertFalse(Storage::disk('local')->exists('image/invoices/file.avif'));
+        $this->assertFalse(Storage::disk('public')->exists('cache/image/invoices/file/thumb.jpg'));
         $this->assertDatabaseMissing(config('laravel-files.table'), [
             'id' => $file->getKey(),
         ]);
@@ -368,11 +416,13 @@ final class FileManagerTest extends TestCase
     #[Test]
     public function destroy_fails_when_source_file_is_missing(): void
     {
-        $file = File::query()->create([
-            'path' => 'document/invoices/missing.pdf',
+        $file = new File([
+            'folder' => 'document/invoices',
             'extension' => FileExtension::Pdf,
             'size' => 8,
         ]);
+        $file->id = 'missing';
+        $file->save();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('missing file');
@@ -493,12 +543,17 @@ final class FileManagerTest extends TestCase
     private function createStoredFile(string $path, string $contents): File
     {
         Storage::disk('local')->put($path, $contents);
+        $filePath = pathinfo($path);
 
-        return File::query()->create([
-            'path' => $path,
-            'extension' => FileExtension::Pdf,
+        $file = new File([
+            'folder' => $filePath['dirname'],
+            'extension' => FileExtension::getEnumByString($filePath['extension']),
             'size' => strlen($contents),
         ]);
+        $file->id = $filePath['filename'];
+        $file->save();
+
+        return $file;
     }
 
     private function assertRollbackTempEmpty(): void

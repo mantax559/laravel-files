@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
+use Mantax559\LaravelFiles\Enums\FileExtension;
 use Mantax559\LaravelFiles\Helpers\FileHelper;
 use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelFiles\Tests\Support\FakeImage;
@@ -41,17 +42,21 @@ final class FileHelperTest extends TestCase
     #[Test]
     public function cache_image_helper_uses_configured_size_and_model_folder(): void
     {
-        Storage::disk('local')->put('image/products/source.jpg', 'image');
+        Storage::disk('local')->put('image/files/file-id/source.jpg', 'image');
         $this->mockImageFacade()
             ->shouldReceive('decodePath')
             ->once()
             ->andReturn(new FakeImage(encodedContents: 'cached'));
-        $file = new File;
-        $file->forceFill(['id' => 'file-id']);
+        $file = new File([
+            'folder' => 'image/files/file-id',
+            'extension' => FileExtension::Jpg,
+            'size' => 5,
+        ]);
+        $file->id = 'source';
 
-        cache_image('image/products/source.jpg', 'thumbnail', $file);
+        cache_image($file, 'thumbnail');
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/files/file-id/source-10x20.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/files/file-id/source/10x20.avif'));
     }
 
     #[Test]
@@ -63,9 +68,9 @@ final class FileHelperTest extends TestCase
             ->once()
             ->andReturn(new FakeImage(30, 40, 'cached'));
 
-        cache_image('image/products/source.jpg', 'auto', 'products');
+        cache_image('image/products/source.jpg', 'auto');
 
-        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source-autoxauto.avif'));
+        $this->assertTrue(Storage::disk('public')->exists('cache/image/products/source/autoxauto.avif'));
     }
 
     #[Test]
@@ -92,8 +97,8 @@ final class FileHelperTest extends TestCase
         $message->shouldNotReceive('embed');
 
         $this->assertStringContainsString(
-            'cache/image/products/source-10x20.avif',
-            FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message, 'products')
+            'cache/image/products/source/10x20.avif',
+            FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message)
         );
     }
 
@@ -109,8 +114,8 @@ final class FileHelperTest extends TestCase
         $message->shouldNotReceive('embed');
 
         $this->assertStringContainsString(
-            'cache/image/products/source-10x20.avif',
-            email_image('image/products/source.jpg', 'thumbnail', $message, 'products')
+            'cache/image/products/source/10x20.avif',
+            email_image('image/products/source.jpg', 'thumbnail', $message)
         );
     }
 
@@ -127,8 +132,8 @@ final class FileHelperTest extends TestCase
         $message->shouldNotReceive('embed');
 
         $this->assertStringContainsString(
-            'cache/image/products/source-10x20.avif',
-            FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message, 'products')
+            'cache/image/products/source/10x20.avif',
+            FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message)
         );
     }
 
@@ -144,7 +149,7 @@ final class FileHelperTest extends TestCase
         $message = Mockery::mock(Message::class);
         $message->shouldReceive('embed')->once()->andReturn('embedded-image');
 
-        $this->assertSame('embedded-image', FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message, 'products'));
+        $this->assertSame('embedded-image', FileHelper::emailImage('image/products/source.jpg', 'thumbnail', $message));
     }
 
     private function mockImageFacade(): MockInterface
