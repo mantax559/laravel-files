@@ -2,27 +2,25 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
 use Mantax559\LaravelFiles\Helpers\FileHelper;
+use Mantax559\LaravelFiles\Models\File;
 
 if (! function_exists('cache_image')) {
     function cache_image(
-        string $sourcePath,
-        string $size,
-        string|int|array|Model|null $folderSource = null
+        string|File $source,
+        string $size
     ): string {
-        return FileHelper::cacheImage($sourcePath, $size, $folderSource);
+        return FileHelper::cacheImage($source, $size);
     }
 }
 
 if (! function_exists('email_image')) {
     function email_image(
-        string $sourcePath,
+        string|File $source,
         string $size,
-        Message $message,
-        string|int|array|Model|null $folderSource = null
+        Message $message
     ): string {
-        return FileHelper::emailImage($sourcePath, $size, $message, $folderSource);
+        return FileHelper::emailImage($source, $size, $message);
     }
 }

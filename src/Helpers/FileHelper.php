@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Helpers;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Message;
+use Mantax559\LaravelFiles\Models\File;
 use Mantax559\LaravelFiles\Services\FileManager;
 use Mantax559\LaravelObservability\Models\Log;
 
@@ -18,27 +18,25 @@ final class FileHelper
     ];
 
     public static function cacheImage(
-        string $sourcePath,
-        string $size,
-        string|int|array|Model|null $folderSource = null
+        string|File $source,
+        string $size
     ): string {
+        $sourcePath = self::sourcePath($source);
         [$width, $height] = self::imageCacheSize($sourcePath, $size);
 
         return FileManager::cacheImage(
             $sourcePath,
             $width,
-            $height,
-            self::normalizeFolders($folderSource)
+            $height
         );
     }
 
     public static function emailImage(
-        string $sourcePath,
+        string|File $source,
         string $size,
-        Message $message,
-        string|int|array|Model|null $folderSource = null
+        Message $message
     ): string {
-        $url = self::cacheImage($sourcePath, $size, $folderSource);
+        $url = self::cacheImage($source, $size);
 
         if (self::isLocalhostUrl()) {
             return $message->embed(public_path($url));
@@ -68,13 +66,13 @@ final class FileHelper
         ];
     }
 
-    private static function normalizeFolders(string|int|array|Model|null $folderSource): string|int|array|null
+    private static function sourcePath(string|File $source): string
     {
-        if ($folderSource instanceof Model) {
-            return [$folderSource->getTable(), $folderSource->getKey()];
+        if ($source instanceof File) {
+            return $source->path;
         }
 
-        return $folderSource;
+        return $source;
     }
 
     private static function isLocalhostUrl(): bool

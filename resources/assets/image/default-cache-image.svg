@@ -2,7 +2,7 @@
     <title id="title">Default image</title>
     <desc id="description">Default placeholder image returned when a cached image cannot be generated.</desc>
     <rect width="800" height="600" fill="#f3f4f6"/>
-    <rect x="80" y="80" width="640" height="440" rx="32" fill="#e5e7eb"/>
-    <circle cx="270" cy="230" r="54" fill="#9ca3af"/>
-    <path d="M160 470 L330 310 L450 420 L530 345 L660 470 Z" fill="#9ca3af"/>
+    <rect x="210" y="165" width="380" height="260" rx="24" fill="#e5e7eb"/>
+    <circle cx="325" cy="255" r="32" fill="#9ca3af"/>
+    <path d="M260 385 L360 300 L430 365 L480 325 L550 385 Z" fill="#9ca3af"/>
 </svg>

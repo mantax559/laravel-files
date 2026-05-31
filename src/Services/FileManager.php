@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Mantax559\LaravelFiles\Services;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File as FileFacade;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
@@ -24,16 +26,16 @@ class FileManager
 
     private const int FILE_READ_CHUNK_BYTES = 1024 * 1024;
 
-    public function create(string|array $files, string $folder, FileTransaction $transaction): File|array
+    public function create(string|UploadedFile|array $files, string|int|array|Model $folderSource, FileTransaction $transaction): File|array
     {
         if (! is_array($files)) {
-            return File::create($this->save($files, $folder, $transaction));
+            return File::create($this->save($files, $folderSource, $transaction));
         }
 
         $models = [];
 
         foreach ($files as $file) {
-            $models[] = File::create($this->save($file, $folder, $transaction));
+            $models[] = File::create($this->save($file, $folderSource, $transaction));
         }
 
         return $models;
@@ -50,16 +52,18 @@ class FileManager
         }
     }
 
-    private function save(string $file, string $folder, FileTransaction $transaction): array
+    private function save(string|UploadedFile $file, string|int|array|Model $folderSource, FileTransaction $transaction): array
     {
-        if (! FileFacade::isFile($file) && ! Str::isUrl($file)) {
+        $readPath = self::getReadPath($file);
+
+        if (! FileFacade::isFile($readPath) && (! is_string($file) || ! Str::isUrl($file))) {
             throw new UserFriendlyException(__('The file could not be read.'));
         }
 
-        $fileExtension = self::getFileExtension($file);
+        $fileExtension = self::getFileExtension(self::getExtensionPath($file));
         self::ensureAcceptedFileExtension($fileExtension);
 
-        $fileContents = self::readFileContents($file);
+        $fileContents = self::readFileContents($readPath);
 
         if ($fileExtension->isImage()) {
             self::ensureUploadImageDimensions($fileContents);
@@ -70,10 +74,7 @@ class FileManager
 
         self::ensureFileSize($fileContents, config('laravel-files.max_file_size_bytes'));
 
-        $filePath = FileStorage::path(
-            FileStorage::path($fileExtension->folder(), slugify($folder)),
-            Str::uuid7()->toString().'.'.$fileExtension->value
-        );
+        $filePath = self::filePath($fileExtension, $folderSource);
 
         $errorCode = FileStorage::save(config('laravel-files.disk'), $filePath, $fileContents);
 
@@ -96,8 +97,7 @@ class FileManager
     public static function cacheImage(
         string $sourcePath,
         ?int $width = null,
-        ?int $height = null,
-        string|int|array|null $folderSource = null
+        ?int $height = null
     ): string {
         if (! FileStorage::disk(config('laravel-files.disk'))->exists($sourcePath)) {
             Log::error('Image cache source file is missing.', [
@@ -108,9 +108,11 @@ class FileManager
             return asset(config('laravel-files.default_image_cache_url'));
         }
 
-        $sourceInfo = pathinfo($sourcePath);
         self::getFileExtension($sourcePath);
-        $cachePath = self::getCacheImagePath($sourceInfo['filename'], $width, $height, $folderSource);
+        $cachePath = FileStorage::path(
+            self::cacheFolder($sourcePath),
+            ($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::STORED_IMAGE_EXTENSION->value
+        );
 
         if (FileStorage::disk(config('laravel-files.image_cache_disk'))->exists($cachePath)) {
             return FileStorage::disk(config('laravel-files.image_cache_disk'))->url($cachePath);
@@ -185,30 +187,63 @@ class FileManager
 
         $transaction->addDeleted($file->path);
 
-        if (! FileStorage::deleteDirectory(config('laravel-files.image_cache_disk'), self::getCacheImageFolder($file->getKey()))) {
+        if (! FileStorage::deleteDirectory(config('laravel-files.image_cache_disk'), self::cacheFolder($file->path))) {
             throw new RuntimeException(__('The file cache directory could not be deleted.'));
         }
     }
 
-    private static function getCacheImageFolder(string|int|array|null $folderSource = null): string
+    private static function filePath(FileExtension $fileExtension, string|int|array|Model $folderSource): string
     {
-        $parts = [self::FOLDER_CACHE, FileExtension::FOLDER_IMAGE];
+        return FileStorage::path(...array_merge(
+            [$fileExtension->folder()],
+            self::folderParts($folderSource),
+            [Str::uuid7()->toString().'.'.$fileExtension->value]
+        ));
+    }
 
-        foreach (is_array($folderSource) ? $folderSource : [$folderSource] as $folder) {
-            if (filled($folder)) {
-                $parts[] = slugify($folder);
-            }
-        }
+    private static function cacheFolder(string $sourcePath): string
+    {
+        $parts = [
+            self::FOLDER_CACHE,
+            ...self::sourceDirectoryParts($sourcePath),
+            slugify(pathinfo($sourcePath, PATHINFO_FILENAME)),
+        ];
 
         return FileStorage::path(...$parts);
     }
 
-    private static function getCacheImagePath(string $filename, ?int $width, ?int $height, string|int|array|null $folderSource = null): string
+    private static function sourceDirectoryParts(string $sourcePath): array
     {
-        return FileStorage::path(
-            self::getCacheImageFolder($folderSource),
-            slugify($filename).'-'.($width ?? self::CACHE_AUTO_DIMENSION).'x'.($height ?? self::CACHE_AUTO_DIMENSION).'.'.FileExtension::STORED_IMAGE_EXTENSION->value
-        );
+        $directory = pathinfo($sourcePath, PATHINFO_DIRNAME);
+
+        if (cmprstr($directory, '.')) {
+            return [FileExtension::FOLDER_IMAGE];
+        }
+
+        $parts = explode('/', $directory);
+
+        return array_filter($parts, static fn (string $part): bool => filled($part) && ! cmprstr($part, '.'));
+    }
+
+    private static function folderParts(string|int|array|Model $folderSource): array
+    {
+        if ($folderSource instanceof Model) {
+            if (empty($folderSource->getKey())) {
+                throw new RuntimeException(__('The folder model must be saved before storing files.'));
+            }
+
+            return self::folderParts([$folderSource->getTable(), $folderSource->getKey()]);
+        }
+
+        $folders = [];
+
+        foreach (is_array($folderSource) ? $folderSource : [$folderSource] as $folder) {
+            if (filled($folder)) {
+                $folders[] = slugify($folder);
+            }
+        }
+
+        return $folders;
     }
 
     private static function readFileContents(string $file): string
@@ -231,6 +266,20 @@ class FileManager
         fclose($handle);
 
         return $contents;
+    }
+
+    private static function getReadPath(string|UploadedFile $file): string
+    {
+        return $file instanceof UploadedFile
+            ? $file->getPathname()
+            : $file;
+    }
+
+    private static function getExtensionPath(string|UploadedFile $file): string
+    {
+        return $file instanceof UploadedFile
+            ? $file->getClientOriginalName()
+            : $file;
     }
 
     private static function getFileExtension(string $path): FileExtension
